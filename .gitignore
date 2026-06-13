@@ -37,3 +37,10 @@ session.json
 *.exe
 *.o
 
+# Old/unrelated project files and documentation
+Zexample/
+ZETACP_GUIDE.md
+zeta_cp_resume.md
+task.md
+
+

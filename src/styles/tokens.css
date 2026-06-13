@@ -1,0 +1,58 @@
+/* src/styles/tokens.css */
+
+:root {
+  /* VS Code Dark+ Colors mapped to ZetaCP */
+  --zcp-bg-editor: #1e1e1e;
+  --zcp-bg-sidebar: #252526;
+  --zcp-bg-activitybar: #333333;
+  --zcp-bg-statusbar: #007acc;
+  --zcp-bg-statusbar-debug: #cc6633;
+  --zcp-bg-tab-inactive: #2d2d2d;
+  --zcp-bg-tab-active: #1e1e1e;
+  --zcp-bg-terminal: #1e1e1e;
+  
+  --zcp-focus-border: #007fd4;
+  --zcp-border: #2a2a2a;
+  --zcp-border-card: #3c3c3c;
+  --zcp-bg-card: #2a2a2a;
+  --zcp-hover-bg: #2a2d2e;
+  --zcp-accent: #007acc;
+
+  /* Text Colors */
+  --zcp-text-primary: #cccccc;
+  --zcp-text-secondary: #858585;
+  --zcp-text-active: #ffffff;
+  --zcp-text-muted: #6b7280;
+
+  /* Verdict colors */
+  --zcp-verdict-ac: #22C55E;   /* Accepted - Xanh lá cây */
+  --zcp-verdict-wa: #EF4444;   /* Wrong Answer - Đỏ */
+  --zcp-verdict-re: #F59E0B;   /* Runtime Error - Vàng cam */
+  --zcp-verdict-tle: #6B7280;  /* Time Limit Exceeded - Xám đậm */
+  --zcp-verdict-mle: #EAB308;  /* Memory Limit Exceeded - Vàng chanh */
+  --zcp-verdict-ce: #6B7280;   /* Compilation Error - Xám đậm */
+
+  /* Spacing System */
+  --zcp-space-1: 4px;
+  --zcp-space-2: 8px;
+  --zcp-space-3: 12px;
+  --zcp-space-4: 16px;
+
+  /* Radius System */
+  --zcp-radius-sm: 2px;
+  --zcp-radius-md: 3px;
+  --zcp-radius-none: 0px;
+
+  /* Transition and Easing System */
+  --zcp-duration: 120ms;
+  --zcp-easing: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Fonts */
+  --zcp-font-mono: "Cascadia Code", Consolas, "Courier New", monospace;
+  --zcp-font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout dimensions */
+  --zcp-activitybar-width: 48px;
+  --zcp-statusbar-height: 22px;
+  --zcp-tab-height: 35px;
+}

@@ -1,0 +1,31 @@
+[package]
+name = "zetacp"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "zetacp_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri        = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+tauri-plugin-fs     = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-shell  = "2"
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
+sqlx         = { version = "0.8", features = ["sqlite", "runtime-tokio", "macros"] }
+tokio        = { version = "1", features = ["full"] }
+rayon        = "1.10"
+tracing      = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror    = "2"
+sha2         = "0.10"
+notify       = "6"              # File watcher cho fs://file_changed
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_System_JobObjects", "Win32_Security", "Win32_Foundation", "Win32_System_Threading"] }

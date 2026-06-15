@@ -72,3 +72,10 @@ task.md
 
 # LSP debug logs
 lsp_debug.log
+
+# Copied Monaco Editor assets
+public/monaco-editor/
+
+# Build script
+build.py
+

@@ -370,7 +370,18 @@ async fn get_or_spawn_lsp(
         {
             let path = std::path::Path::new(&gpp_val);
             if let Some(parent) = path.parent() {
-                extra_path = Some(parent.to_string_lossy().to_string());
+                let parent_str = parent.to_string_lossy();
+                if !parent_str.is_empty() && parent_str != "." {
+                    if path.is_relative() {
+                        if let Ok(mut exe_dir) = std::env::current_exe() {
+                            exe_dir.pop();
+                            let abs_parent = exe_dir.join(parent);
+                            extra_path = Some(abs_parent.to_string_lossy().to_string());
+                        }
+                    } else {
+                        extra_path = Some(parent_str.to_string());
+                    }
+                }
             }
         }
     } else if language == "python" {

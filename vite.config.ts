@@ -1,8 +1,21 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import fs from "fs";
+import path from "path";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
+
+// Auto-copy Monaco Editor files if needed
+const monacoSrc = path.resolve(__dirname, "node_modules/monaco-editor/min/vs");
+const monacoDest = path.resolve(__dirname, "public/monaco-editor/min/vs");
+
+if (fs.existsSync(monacoSrc) && !fs.existsSync(monacoDest)) {
+  fs.mkdirSync(path.dirname(monacoDest), { recursive: true });
+  fs.cpSync(monacoSrc, monacoDest, { recursive: true });
+  console.log("Auto-copied Monaco Editor assets to public/monaco-editor/min/vs");
+}
+
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({

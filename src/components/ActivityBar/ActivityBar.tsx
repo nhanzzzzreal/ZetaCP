@@ -8,7 +8,7 @@ interface ActivityBarProps {
   leftPanelOpen: boolean;
   onToggleLeftPanel: () => void;
   onOpenSettings: () => void;
-  onOpenDocs: (docsType: 'cp-algorithms' | 'cppreference') => void;
+  onOpenDocs: (docsType: 'cp-algorithms') => void;
 }
 
 export const ActivityBar: React.FC<ActivityBarProps> = ({
@@ -72,13 +72,6 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
           title="CP Algorithms Reference"
         >
           <span className="codicon codicon-library" />
-        </button>
-        <button
-          onClick={() => onOpenDocs('cppreference')}
-          className="relative w-full h-[36px] flex items-center justify-center cursor-pointer text-[17px] text-[var(--zcp-text-secondary)] hover:text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--zcp-focus-border)]"
-          title="C++ Reference"
-        >
-          <span className="codicon codicon-code" />
         </button>
 
         {/* Divider line for Settings */}

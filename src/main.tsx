@@ -1,6 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { loader } from "@monaco-editor/react";
+
+// Configure Monaco Editor to load from local public directory
+loader.config({ paths: { vs: "/monaco-editor/min/vs" } });
 
 // Disable default webview context menu globally
 window.addEventListener("contextmenu", (e) => e.preventDefault());

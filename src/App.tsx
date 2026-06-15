@@ -220,7 +220,7 @@ function MainApp() {
     setTerminalOpen(!terminalOpen);
   };
 
-  const handleOpenDocs = (docsType: 'cp-algorithms' | 'cppreference') => {
+  const handleOpenDocs = (docsType: 'cp-algorithms') => {
     invoke('open_docs_window', { docsType }).catch((err) => {
       console.error('Failed to open docs window:', err);
     });

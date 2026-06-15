@@ -90,6 +90,10 @@ pub async fn run_in_sandbox(cfg: ProcessConfig<'_>) -> Result<ProcessOutput, std
     };
 
     let mut cmd = Command::new(cfg.exec_path);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
     cmd.kill_on_drop(true);
     cmd.current_dir(cfg.working_dir);
     for arg in cfg.args {

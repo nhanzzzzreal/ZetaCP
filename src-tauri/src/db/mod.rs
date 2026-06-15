@@ -43,6 +43,9 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ZetaError> {
         (2, include_str!("migrations/v2.sql")),
         (3, include_str!("migrations/v3.sql")),
         (4, include_str!("migrations/v4.sql")),
+        (5, include_str!("migrations/v5.sql")),
+        (6, include_str!("migrations/v6.sql")),
+        (7, include_str!("migrations/v7.sql")),
     ];
 
     for (version, sql) in migrations {

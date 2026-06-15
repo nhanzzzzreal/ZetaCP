@@ -6,4 +6,7 @@ pub mod compiler;
 pub mod session;
 pub mod testcases;
 pub mod overlay;
+pub mod lsp;
+pub mod snippets;
+pub mod docs;
 

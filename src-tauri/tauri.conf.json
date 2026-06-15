@@ -20,9 +20,12 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost https://asset.localhost http://docs.localhost http://localhost:* ws://localhost:*; frame-src 'self' asset: http://asset.localhost https://asset.localhost http://docs.localhost; img-src 'self' asset: http://asset.localhost https://asset.localhost http://docs.localhost blob: data:; style-src 'self' 'unsafe-inline' asset: http://asset.localhost https://asset.localhost http://docs.localhost; script-src 'self' 'unsafe-inline' 'unsafe-eval' asset: http://asset.localhost https://asset.localhost http://docs.localhost; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost https://asset.localhost http://docs.localhost http://localhost:* ws://localhost:* https://fonts.googleapis.com https://fonts.gstatic.com;",
       "assetProtocol": {
-        "enable": true
+        "enable": true,
+        "scope": [
+          "**/*"
+        ]
       }
     }
   },

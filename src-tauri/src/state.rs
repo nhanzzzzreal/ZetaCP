@@ -10,6 +10,7 @@ pub struct AppState {
     pub project_root: Mutex<Option<String>>,    // Đường dẫn tuyệt đối của project đang mở
     pub judge_handle: Mutex<Option<tokio::task::JoinHandle<()>>>, // Handle để dừng judge
     pub file_watcher: Mutex<Option<RecommendedWatcher>>, // Watcher quản lý thay đổi file
+    pub lsp_instances: Mutex<HashMap<String, std::sync::Arc<crate::commands::lsp::LspServerInstance>>>,
 }
 
 impl AppState {

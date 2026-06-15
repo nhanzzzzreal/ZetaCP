@@ -182,6 +182,10 @@ pub async fn judge_testcase(
                 let stdin_payload = format!("{}\r\n{}\r\n", data_dir_str, work_dir_str);
 
                 let mut cmd = tokio::process::Command::new(&abs_checker_path);
+                #[cfg(target_os = "windows")]
+                {
+                    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+                }
                 cmd.stdin(Stdio::piped())
                    .stdout(Stdio::piped())
                    .stderr(Stdio::piped())
@@ -210,6 +214,11 @@ pub async fn judge_testcase(
                 } else {
                     tokio::process::Command::new(&abs_checker_path)
                 };
+                
+                #[cfg(target_os = "windows")]
+                {
+                    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+                }
                 
                 // CMS checker: input, expected, actual
                 // Others: input, actual, expected

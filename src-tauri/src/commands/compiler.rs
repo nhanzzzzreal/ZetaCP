@@ -33,9 +33,14 @@ fn get_file_hash(path: &Path) -> Result<String, std::io::Error> {
 #[tauri::command]
 pub async fn check_compiler(compiler: String) -> Result<CompilerInfo, ZetaError> {
     let check_arg = "--version";
-    let output = Command::new(&compiler)
-        .arg(check_arg)
-        .output();
+    let mut cmd = Command::new(&compiler);
+    cmd.arg(check_arg);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let output = cmd.output();
 
     match output {
         Ok(out) => {
@@ -164,6 +169,11 @@ pub async fn compile_file(
 
     // Build compilation command
     let mut cmd = Command::new(&gpp_path);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
     
     // Add compilation flags
     if flags.is_empty() {
@@ -317,6 +327,11 @@ pub async fn compile_checker(
             .unwrap_or_else(|| "-O2 -std=c++17".to_string());
 
         let mut cmd = Command::new(&gpp_path);
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        }
         for flag in resolved_flags.split_whitespace() {
             cmd.arg(flag);
         }

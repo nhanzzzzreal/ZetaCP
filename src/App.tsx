@@ -23,8 +23,32 @@ import { listen, emit } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { DiffLine } from './types/testcase';
 import { ActivityBar } from './components/ActivityBar/ActivityBar';
+import { SnippetManager } from './components/Settings/SnippetManager';
+import { useSnippetStore } from './stores/useSnippetStore';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { DocsViewerWindow } from './components/DocsViewer/DocsViewerWindow';
+import { StandaloneOverlayWindow } from './components/Overlay/StandaloneOverlayWindow';
 
 function App() {
+  const [windowLabel] = useState<string>(() => {
+    try {
+      return getCurrentWindow().label;
+    } catch (e) {
+      console.error('Failed to get window label:', e);
+      return 'main';
+    }
+  });
+
+  if (windowLabel.startsWith('docs-window-')) {
+    const docsType = windowLabel.replace('docs-window-', '');
+    return <DocsViewerWindow docsType={docsType} />;
+  }
+
+  if (windowLabel.startsWith('overlay-widget-')) {
+    const overlayId = windowLabel.replace('overlay-widget-', '');
+    return <StandaloneOverlayWindow overlayId={overlayId} />;
+  }
+
   return <MainApp />;
 }
 
@@ -32,6 +56,7 @@ function MainApp() {
   const activeFile = useProjectStore((s) => s.activeFile);
   const isSettingsOpen = useSettingsStore((s) => s.isSettingsOpen);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
+  const loadSnippets = useSnippetStore((s) => s.loadSnippets);
   
   const loadOverlaysForFile = useOverlayStore((s) => s.loadOverlaysForFile);
   const syncOverlays = useOverlayStore((s) => s.syncOverlays);
@@ -91,6 +116,7 @@ function MainApp() {
   useEffect(() => {
     // 1. Load initial settings
     loadSettings();
+    loadSnippets();
     
     // 2. Setup watcher / sync overlays on active file change
     if (activeFile) {
@@ -194,6 +220,12 @@ function MainApp() {
     setTerminalOpen(!terminalOpen);
   };
 
+  const handleOpenDocs = (docsType: 'cp-algorithms' | 'cppreference') => {
+    invoke('open_docs_window', { docsType }).catch((err) => {
+      console.error('Failed to open docs window:', err);
+    });
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen bg-[var(--zcp-bg-editor)] text-[var(--zcp-text-primary)] overflow-hidden relative">
       {/* Title Bar */}
@@ -215,6 +247,7 @@ function MainApp() {
           leftPanelOpen={leftPanelOpen}
           onToggleLeftPanel={handleToggleLeftPanel}
           onOpenSettings={openSettings}
+          onOpenDocs={handleOpenDocs}
         />
 
         <Group orientation="horizontal">
@@ -234,6 +267,8 @@ function MainApp() {
               <div className="w-full h-full bg-[var(--zcp-bg-sidebar)] p-4 text-xs text-[var(--zcp-text-secondary)] font-sans border-r border-[var(--zcp-border)]">
                 Search in project (Coming soon)
               </div>
+            ) : activeTab === 'snippets' ? (
+              <SnippetManager />
             ) : (
               <div className="w-full h-full bg-[var(--zcp-bg-sidebar)] p-4 text-xs text-[var(--zcp-text-secondary)] font-sans border-r border-[var(--zcp-border)]">
                 CP Debugger (Coming soon)

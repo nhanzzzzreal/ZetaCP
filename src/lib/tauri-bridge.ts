@@ -210,5 +210,37 @@ export async function createDiffWindow(testcaseName: string, expected: string, a
   return invoke<void>('create_diff_window', { testcaseName, expected, actual });
 }
 
+// 10. Snippet Commands
+export interface Snippet {
+  id: number;
+  trigger: string;
+  description: string;
+  code: string;
+  language: string;
+  is_default: number; // 0 | 1
+}
+
+export async function loadSnippetsBackend(): Promise<Snippet[]> {
+  return invoke<Snippet[]>('load_snippets');
+}
+
+export async function saveSnippetBackend(snippet: Omit<Snippet, 'id'> & { id?: number }): Promise<number> {
+  return invoke<number>('save_snippet', {
+    snippet: {
+      id: snippet.id ?? null,
+      trigger: snippet.trigger,
+      description: snippet.description,
+      code: snippet.code,
+      language: snippet.language,
+      is_default: snippet.is_default ?? 0
+    }
+  });
+}
+
+export async function deleteSnippetBackend(id: number): Promise<void> {
+  return invoke<void>('delete_snippet', { id });
+}
+
+
 
 

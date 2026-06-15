@@ -12,11 +12,16 @@ use crate::state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let _ = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::WARN)
+        .try_init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .register_uri_scheme_protocol("docs", crate::commands::docs::docs_protocol_handler)
         .setup(|app| {
             // Xác định đường dẫn file settings DB cạnh .exe
             let mut db_dir = std::env::current_exe()
@@ -53,6 +58,7 @@ pub fn run() {
                 project_root: Mutex::new(None),
                 judge_handle: Mutex::new(None),
                 file_watcher: Mutex::new(None),
+                lsp_instances: Mutex::new(std::collections::HashMap::new()),
             });
 
             Ok(())
@@ -60,6 +66,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             crate::commands::settings::load_settings,
             crate::commands::settings::save_settings,
+            crate::commands::snippets::load_snippets,
+            crate::commands::snippets::save_snippet,
+            crate::commands::snippets::delete_snippet,
             crate::commands::file_system::open_project,
             crate::commands::file_system::scan_directory,
             crate::commands::compiler::check_compiler,
@@ -102,7 +111,15 @@ pub fn run() {
             crate::commands::overlay::save_overlays,
             crate::commands::overlay::delete_overlay,
             crate::commands::overlay::create_overlay_window,
-            crate::commands::overlay::create_diff_window
+            crate::commands::overlay::create_diff_window,
+            crate::commands::lsp::lsp_initialize,
+            crate::commands::lsp::lsp_did_open,
+            crate::commands::lsp::lsp_did_change,
+            crate::commands::lsp::lsp_get_completions,
+            crate::commands::lsp::lsp_get_hover,
+            crate::commands::lsp::lsp_get_definition,
+            crate::commands::docs::open_docs_window,
+            crate::commands::docs::get_docs_path
         ])
         .run(tauri::generate_context!())
         .expect("gặp lỗi khi khởi động ứng dụng tauri");

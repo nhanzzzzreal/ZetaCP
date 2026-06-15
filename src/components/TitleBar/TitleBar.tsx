@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { useSettingsStore } from '../../stores/useSettingsStore';
 import logo from '../../assets/logo.svg';
 
 interface TitleBarProps {
@@ -24,7 +23,6 @@ export const TitleBar: React.FC<TitleBarProps> = ({
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const appWindow = getCurrentWindow();
-  const openSettings = useSettingsStore((state) => state.openSettings);
 
   useEffect(() => {
     // Listen for resize events to track maximized state
@@ -108,13 +106,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
           >
             <span className="codicon codicon-layout-sidebar-right flex items-center justify-center" />
           </button>
-          <button
-            onClick={openSettings}
-            className="p-1.5 rounded-[var(--zcp-radius-sm)] text-[14px] text-[var(--zcp-text-secondary)] hover:bg-[var(--zcp-hover-bg)] hover:text-[var(--zcp-text-active)] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer"
-            title="System Settings"
-          >
-            <span className="codicon codicon-settings-gear flex items-center justify-center" />
-          </button>
+
         </div>
 
         {/* Window controls */}

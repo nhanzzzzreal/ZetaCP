@@ -8,6 +8,7 @@ interface ActivityBarProps {
   leftPanelOpen: boolean;
   onToggleLeftPanel: () => void;
   onOpenSettings: () => void;
+  onOpenDocs: (docsType: 'cp-algorithms' | 'cppreference') => void;
 }
 
 export const ActivityBar: React.FC<ActivityBarProps> = ({
@@ -16,11 +17,13 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
   leftPanelOpen,
   onToggleLeftPanel,
   onOpenSettings,
+  onOpenDocs,
 }) => {
   const items = [
     { id: 'explorer', icon: 'files', label: 'Explorer (Ctrl+Shift+E)' },
     { id: 'search', icon: 'search', label: 'Search (Ctrl+Shift+F)' },
     { id: 'debug', icon: 'debug-alt', label: 'Run and Debug (Ctrl+Shift+D)' },
+    { id: 'snippets', icon: 'symbol-method', label: 'Snippets' },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -60,8 +63,27 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
         })}
       </div>
 
-      {/* Bottom Icons (Settings) */}
-      <div className="w-full">
+      {/* Bottom Icons (Docs + Settings) */}
+      <div className="w-full flex flex-col gap-1.5 pb-1">
+        {/* Offline Documentation Buttons */}
+        <button
+          onClick={() => onOpenDocs('cp-algorithms')}
+          className="relative w-full h-[36px] flex items-center justify-center cursor-pointer text-[17px] text-[var(--zcp-text-secondary)] hover:text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--zcp-focus-border)]"
+          title="CP Algorithms Reference"
+        >
+          <span className="codicon codicon-library" />
+        </button>
+        <button
+          onClick={() => onOpenDocs('cppreference')}
+          className="relative w-full h-[36px] flex items-center justify-center cursor-pointer text-[17px] text-[var(--zcp-text-secondary)] hover:text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--zcp-focus-border)]"
+          title="C++ Reference"
+        >
+          <span className="codicon codicon-code" />
+        </button>
+
+        {/* Divider line for Settings */}
+        <div className="w-5 h-[1px] bg-[var(--zcp-border)]/50 self-center my-1" />
+
         <button
           onClick={onOpenSettings}
           className="w-full h-[36px] flex items-center justify-center cursor-pointer text-[18px] text-[var(--zcp-text-secondary)] hover:text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--zcp-focus-border)]"

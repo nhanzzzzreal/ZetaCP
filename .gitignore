@@ -7,7 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Frontend build output
 dist
 dist-ssr
 *.local
@@ -29,7 +32,7 @@ zetacp-settings.db*
 *.db-shm
 *.db-wal
 
-# App workspace caches & binaries
+# App workspace caches & session
 .ZetaCP/
 session.json
 
@@ -37,10 +40,35 @@ session.json
 *.exe
 *.o
 
-# Old/unrelated project files and documentation
+# Rust / Cargo build artifacts
+src-tauri/target/
+
+# Tauri generated schemas (regenerated on each build)
+src-tauri/gen/
+
+# Offline documentation bundles (large, downloaded separately)
+# See ROADMAP.md for download instructions
+src-tauri/target/debug/cp-algorithms/
+src-tauri/target/debug/cppreference/
+src-tauri/target/release/cp-algorithms/
+src-tauri/target/release/cppreference/
+
+# Build script output
+dist-release/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Old/unrelated project files
 Zexample/
 ZETACP_GUIDE.md
 zeta_cp_resume.md
 task.md
 
-
+# LSP debug logs
+lsp_debug.log

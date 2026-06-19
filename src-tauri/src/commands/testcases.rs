@@ -701,7 +701,8 @@ pub async fn run_testcases(
             .fetch_optional(&state.settings_db)
             .await
             .unwrap_or(None)
-            .unwrap_or_else(|| "python".to_string());
+            .unwrap_or_else(|| crate::get_default_python());
+        let resolved_python = crate::resolve_portable_path(&python_path);
         
         let full_src_path = std::path::Path::new(&project_root).join(&file_path);
         
@@ -713,7 +714,7 @@ pub async fn run_testcases(
             }
         }
         python_args.push(full_src_path.to_string_lossy().to_string());
-        (python_path, python_args)
+        (resolved_python, python_args)
     } else {
         let binary_relative_path: Option<String> = sqlx::query_scalar(
             "SELECT binary_path FROM CompileCache WHERE file_path = ?"

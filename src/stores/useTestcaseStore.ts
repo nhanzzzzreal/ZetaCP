@@ -622,6 +622,10 @@ export const useTestcaseStore = create<TestcaseState>((set, get) => ({
           projectRoot,
         });
 
+        if (compileResult.compilerPath) {
+          writeToTerminal(`Compiler: ${compileResult.compilerPath}\n`);
+        }
+
         if (!get().isCompiling) {
           // Cancelled!
           return;

@@ -78,8 +78,11 @@ async fn save_setting(pool: &SqlitePool, key: &str, value: &str) -> Result<(), s
 pub async fn load_settings(state: State<'_, AppState>) -> Result<GlobalSettings, ZetaError> {
     let pool = &state.settings_db;
 
-    let gpp_path = get_setting(pool, "compiler.gpp_path", "g++").await;
-    let python_path = get_setting(pool, "compiler.python_path", "python").await;
+    let default_gpp = crate::get_default_gpp();
+    let default_python = crate::get_default_python();
+
+    let gpp_path = get_setting(pool, "compiler.gpp_path", &default_gpp).await;
+    let python_path = get_setting(pool, "compiler.python_path", &default_python).await;
     let default_flags = get_setting(pool, "compiler.default_flags", "-O2 -std=c++17").await;
     let theme = get_setting(pool, "theme", "dark").await;
     let font_editor = get_setting(pool, "font.editor", "Consolas").await;

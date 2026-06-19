@@ -6,6 +6,45 @@ pub mod db;
 pub mod judge;
 pub mod commands;
 
+pub fn resolve_portable_path(path_str: &str) -> String {
+    let path = std::path::Path::new(path_str);
+    if path.is_absolute() || (!path_str.contains('/') && !path_str.contains('\\')) {
+        return path_str.to_string();
+    }
+    if let Ok(mut exe_dir) = std::env::current_exe() {
+        exe_dir.pop();
+        return exe_dir.join(path).to_string_lossy().to_string();
+    }
+    path_str.to_string()
+}
+
+pub fn get_default_gpp() -> String {
+    if let Ok(mut exe_dir) = std::env::current_exe() {
+        exe_dir.pop();
+        if exe_dir.join("w64devkit").join("bin").join("g++.exe").exists() {
+            "w64devkit/bin/g++.exe".to_string()
+        } else {
+            "g++".to_string()
+        }
+    } else {
+        "g++".to_string()
+    }
+}
+
+pub fn get_default_python() -> String {
+    if let Ok(mut exe_dir) = std::env::current_exe() {
+        exe_dir.pop();
+        if exe_dir.join("python-3.12.7").join("python.exe").exists() {
+            "python-3.12.7/python.exe".to_string()
+        } else {
+            "python".to_string()
+        }
+    } else {
+        "python".to_string()
+    }
+}
+
+
 use tauri::Manager;
 use tokio::sync::Mutex;
 use crate::state::AppState;

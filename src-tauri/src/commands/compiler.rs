@@ -14,6 +14,8 @@ pub struct CompileResult {
     #[serde(rename = "binaryPath")]
     pub binary_path: String, // Relative path to binary
     pub cached: bool,
+    #[serde(rename = "compilerPath")]
+    pub compiler_path: String,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -33,7 +35,8 @@ fn get_file_hash(path: &Path) -> Result<String, std::io::Error> {
 #[tauri::command]
 pub async fn check_compiler(compiler: String) -> Result<CompilerInfo, ZetaError> {
     let check_arg = "--version";
-    let mut cmd = Command::new(&compiler);
+    let resolved = crate::resolve_portable_path(&compiler);
+    let mut cmd = Command::new(&resolved);
     cmd.arg(check_arg);
     #[cfg(target_os = "windows")]
     {
@@ -55,14 +58,14 @@ pub async fn check_compiler(compiler: String) -> Result<CompilerInfo, ZetaError>
             let first_line = version_output.lines().next().unwrap_or("").trim().to_string();
             Ok(CompilerInfo {
                 found: true,
-                path: compiler,
+                path: resolved,
                 version: if first_line.is_empty() { "Compiler found".to_string() } else { first_line },
             })
         }
         Err(_) => {
             Ok(CompilerInfo {
                 found: false,
-                path: compiler,
+                path: resolved,
                 version: "Not found in PATH".to_string(),
             })
         }
@@ -92,6 +95,7 @@ pub async fn compile_file(
             stderr: String::new(),
             binary_path: file_path,
             cached: true,
+            compiler_path: String::new(),
         });
     }
 
@@ -105,6 +109,14 @@ pub async fn compile_file(
     // Calculate SHA-256 hash of the source file
     let current_hash = get_file_hash(&src_path)
         .map_err(|e| ZetaError::Io(format!("Error reading source file for hashing: {}", e)))?;
+
+    // Read compiler path from global settings
+    let gpp_path = sqlx::query_scalar::<_, String>("SELECT value FROM Settings WHERE key = 'compiler.gpp_path'")
+        .fetch_optional(&state.settings_db)
+        .await
+        .unwrap_or(None)
+        .unwrap_or_else(|| crate::get_default_gpp());
+    let resolved_gpp = crate::resolve_portable_path(&gpp_path);
 
     // Get current project database from AppState
     let proj_db = state.get_db_pool(&src_path.to_string_lossy(), true).await?.unwrap();
@@ -128,18 +140,13 @@ pub async fn compile_file(
                     stderr: String::new(),
                     binary_path: cached_bin_path,
                     cached: true,
+                    compiler_path: resolved_gpp.clone(),
                 });
             }
         }
     }
 
     // 2. Cache Miss -> Perform compilation
-    // Read compiler path from global settings
-    let gpp_path = sqlx::query_scalar::<_, String>("SELECT value FROM Settings WHERE key = 'compiler.gpp_path'")
-        .fetch_optional(&state.settings_db)
-        .await
-        .unwrap_or(None)
-        .unwrap_or_else(|| "g++".to_string());
 
     // Configure output directory in parent directory (.ZetaCP/)
     let src_parent = src_path.parent().ok_or_else(|| ZetaError::InvalidInput {
@@ -168,7 +175,19 @@ pub async fn compile_file(
         .replace('\\', "/");
 
     // Build compilation command
-    let mut cmd = Command::new(&gpp_path);
+    let mut cmd = Command::new(&resolved_gpp);
+    
+    // Add g++ directory to PATH so it can find cc1plus, as, ld
+    if let Some(parent) = Path::new(&resolved_gpp).parent() {
+        let mut paths = vec![parent.to_path_buf()];
+        if let Ok(current_path) = std::env::var("PATH") {
+            paths.extend(std::env::split_paths(&current_path));
+        }
+        if let Ok(new_path) = std::env::join_paths(paths) {
+            cmd.env("PATH", new_path);
+        }
+    }
+
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
@@ -242,6 +261,7 @@ pub async fn compile_file(
                     stderr,
                     binary_path: rel_bin_path,
                     cached: false,
+                    compiler_path: resolved_gpp.clone(),
                 })
             } else {
                 Ok(CompileResult {
@@ -249,6 +269,7 @@ pub async fn compile_file(
                     stderr,
                     binary_path: String::new(),
                     cached: false,
+                    compiler_path: resolved_gpp.clone(),
                 })
             }
         }
@@ -258,6 +279,7 @@ pub async fn compile_file(
                 stderr: format!("Cannot invoke compiler '{}': {}", gpp_path, e),
                 binary_path: String::new(),
                 cached: false,
+                compiler_path: resolved_gpp.clone(),
             })
         }
     }
@@ -289,6 +311,7 @@ pub async fn compile_checker(
             stderr: format!("Checker file not found: {}", checker_path),
             binary_path: String::new(),
             cached: false,
+            compiler_path: String::new(),
         });
     }
 
@@ -318,7 +341,7 @@ pub async fn compile_checker(
             .fetch_optional(&state.settings_db)
             .await
             .unwrap_or(None)
-            .unwrap_or_else(|| "g++".to_string());
+            .unwrap_or_else(|| crate::get_default_gpp());
 
         let resolved_flags = sqlx::query_scalar::<_, String>("SELECT value FROM Settings WHERE key = 'compiler.default_flags'")
             .fetch_optional(&state.settings_db)
@@ -326,7 +349,20 @@ pub async fn compile_checker(
             .unwrap_or(None)
             .unwrap_or_else(|| "-O2 -std=c++17".to_string());
 
-        let mut cmd = Command::new(&gpp_path);
+        let resolved_gpp = crate::resolve_portable_path(&gpp_path);
+        let mut cmd = Command::new(&resolved_gpp);
+        
+        // Add g++ directory to PATH so it can find cc1plus, as, ld
+        if let Some(parent) = Path::new(&resolved_gpp).parent() {
+            let mut paths = vec![parent.to_path_buf()];
+            if let Ok(current_path) = std::env::var("PATH") {
+                paths.extend(std::env::split_paths(&current_path));
+            }
+            if let Ok(new_path) = std::env::join_paths(paths) {
+                cmd.env("PATH", new_path);
+            }
+        }
+
         #[cfg(target_os = "windows")]
         {
             use std::os::windows::process::CommandExt;
@@ -349,6 +385,7 @@ pub async fn compile_checker(
                         stderr,
                         binary_path: rel_bin_path,
                         cached: false,
+                        compiler_path: resolved_gpp.clone(),
                     })
                 } else {
                     Ok(CompileResult {
@@ -356,6 +393,7 @@ pub async fn compile_checker(
                         stderr,
                         binary_path: String::new(),
                         cached: false,
+                        compiler_path: resolved_gpp.clone(),
                     })
                 }
             }
@@ -365,6 +403,7 @@ pub async fn compile_checker(
                     stderr: format!("Cannot invoke compiler '{}': {}", gpp_path, e),
                     binary_path: String::new(),
                     cached: false,
+                    compiler_path: resolved_gpp.clone(),
                 })
             }
         }
@@ -391,6 +430,7 @@ pub async fn compile_checker(
             stderr: String::new(),
             binary_path: rel_bin_path,
             cached: false,
+            compiler_path: String::new(),
         })
     }
 }

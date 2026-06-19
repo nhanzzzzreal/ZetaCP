@@ -349,12 +349,7 @@ async fn get_or_spawn_lsp(
                 args.push(format!("--resource-dir={}", resource_dir_18_1_3.to_string_lossy()));
             }
         } else if language == "python" {
-            let portable_python = exe_dir.join("python-3.12.7").join("python.exe");
-            if portable_python.exists() {
-                exec_path = portable_python.to_string_lossy().to_string();
-            } else {
-                exec_path = "python".to_string();
-            }
+            exec_path = crate::resolve_portable_path(&crate::get_default_python());
             args.push("-m".to_string());
             args.push("pylsp".to_string());
         }
@@ -364,25 +359,27 @@ async fn get_or_spawn_lsp(
     let pool = &state.settings_db;
     let mut extra_path: Option<String> = None;
     if language == "cpp" {
-        if let Ok(Some(gpp_val)) = sqlx::query_scalar::<_, String>("SELECT value FROM Settings WHERE key = 'compiler.gpp_path'")
+        // Prefer stored setting, otherwise fall back to dynamic default
+        let gpp_val = sqlx::query_scalar::<_, String>("SELECT value FROM Settings WHERE key = 'compiler.gpp_path'")
             .fetch_optional(pool)
-            .await 
-        {
-            let path = std::path::Path::new(&gpp_val);
-            if let Some(parent) = path.parent() {
-                let parent_str = parent.to_string_lossy();
-                if !parent_str.is_empty() && parent_str != "." {
-                    if path.is_relative() {
-                        if let Ok(mut exe_dir) = std::env::current_exe() {
-                            exe_dir.pop();
-                            let abs_parent = exe_dir.join(parent);
-                            extra_path = Some(abs_parent.to_string_lossy().to_string());
-                        }
-                    } else {
-                        extra_path = Some(parent_str.to_string());
-                    }
-                }
+            .await
+            .unwrap_or(None)
+            .unwrap_or_else(|| crate::get_default_gpp());
+
+        let resolved_gpp = crate::resolve_portable_path(&gpp_val);
+        let resolved_path = std::path::Path::new(&resolved_gpp);
+
+        if let Some(parent) = resolved_path.parent() {
+            let parent_str = parent.to_string_lossy();
+            if !parent_str.is_empty() && parent_str != "." {
+                extra_path = Some(parent_str.to_string());
             }
+        }
+
+        // Update --query-driver arg to point to exact resolved g++ so clangd
+        // queries the correct compiler for system include paths
+        if let Some(pos) = args.iter().position(|a| a.starts_with("--query-driver=")) {
+            args[pos] = format!("--query-driver={}", resolved_gpp);
         }
     } else if language == "python" {
         if let Ok(mut exe_dir) = std::env::current_exe() {

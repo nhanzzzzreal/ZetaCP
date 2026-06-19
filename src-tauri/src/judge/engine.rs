@@ -207,8 +207,9 @@ pub async fn judge_testcase(
                         .fetch_optional(&state.settings_db)
                         .await
                         .unwrap_or(None)
-                        .unwrap_or_else(|| "python".to_string());
-                    let mut c = tokio::process::Command::new(python_path);
+                        .unwrap_or_else(|| crate::get_default_python());
+                    let resolved_python = crate::resolve_portable_path(&python_path);
+                    let mut c = tokio::process::Command::new(resolved_python);
                     c.arg(&abs_checker_path);
                     c
                 } else {

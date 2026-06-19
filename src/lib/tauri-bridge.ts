@@ -11,6 +11,7 @@ export interface CompileResult {
   stderr: string;
   binaryPath: string; // matches `binary_path`
   cached: boolean;
+  compilerPath: string;
 }
 
 export interface CompilerInfo {

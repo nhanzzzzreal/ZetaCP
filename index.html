@@ -5,6 +5,10 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZetaCP</title>
+    <!-- Critical CSS: prevent codicon FOUC (icons flashing large then shrinking) -->
+    <style>
+      .codicon,.codicon[class*='codicon-']{display:inline-block;line-height:1;font-style:normal;font-weight:normal;overflow:visible;vertical-align:middle}
+    </style>
   </head>
 
   <body>

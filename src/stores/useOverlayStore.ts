@@ -2,10 +2,17 @@ import { create } from 'zustand';
 import { 
   OverlayState, 
   loadOverlays, 
-  saveOverlaysBackend, 
-  deleteOverlayBackend
 } from '../lib/tauri-bridge';
 import { useProjectStore } from './useProjectStore';
+import {
+  getDefaultTitle,
+  getDefaultContent,
+  getDefaultDimensions,
+  createOverlayState,
+  saveOverlayState,
+  loadAndSetOverlays,
+  deleteOverlayState
+} from './overlayHelpers';
 
 export type { OverlayState };
 export type Overlay = OverlayState;
@@ -56,6 +63,27 @@ const triggerDebouncedSave = (get: any) => {
   }, 400);
 };
 
+const handlePendingLoad = (get: any) => {
+  if (pendingFilePath) {
+    const next = pendingFilePath;
+    pendingFilePath = null;
+    get().loadOverlaysForFile(next);
+  }
+};
+
+const applyOverlayChange = (set: any, get: any, id: string, mapper: (o: OverlayState) => OverlayState) => {
+  const nextOverlays = get().overlays.map((o: OverlayState) => o.id === id ? mapper(o) : o);
+  set({ overlays: nextOverlays });
+  return nextOverlays;
+};
+
+const saveTargetOverlay = (nextOverlays: OverlayState[], id: string) => {
+  const target = nextOverlays.find(o => o.id === id);
+  if (target && target.filePath) {
+    saveOverlayState(target.filePath, nextOverlays).catch(() => {});
+  }
+};
+
 export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
   overlays: [],
   loadedFilePaths: [],
@@ -70,22 +98,10 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     }
     isSwitching = true;
     pendingFilePath = null;
-
     try {
       const isLoaded = get().loadedFilePaths.includes(filePath);
       if (!isLoaded) {
-        const loaded = await loadOverlays(filePath);
-        const mapped = loaded.map((o, idx) => ({
-          ...o,
-          zIndex: o.zIndex || (idx + 1),
-          isVisible: o.isVisible !== undefined ? o.isVisible : true
-        }));
-
-        set(state => ({
-          overlays: [...state.overlays, ...mapped],
-          loadedFilePaths: [...state.loadedFilePaths, filePath],
-          currentFilePath: filePath
-        }));
+        await loadAndSetOverlays(filePath, set);
       } else {
         set({ currentFilePath: filePath });
       }
@@ -93,11 +109,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
       console.error(`[useOverlayStore] Failed to load overlays for ${filePath}:`, err);
     } finally {
       isSwitching = false;
-      if (pendingFilePath) {
-        const next = pendingFilePath;
-        pendingFilePath = null;
-        get().loadOverlaysForFile(next);
-      }
+      handlePendingLoad(get);
     }
   },
 
@@ -126,14 +138,8 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
   
   saveOverlays: async () => {
     const { overlays, currentFilePath } = get();
-    if (!currentFilePath) return;
-    try {
-      const fileOverlays = overlays.filter(o => o.filePath === currentFilePath);
-      await saveOverlaysBackend(currentFilePath, fileOverlays);
-      const { emit } = await import('@tauri-apps/api/event');
-      await emit('overlays-updated');
-    } catch (err) {
-      console.error(`[useOverlayStore] Failed to save overlays:`, err);
+    if (currentFilePath) {
+      await saveOverlayState(currentFilePath, overlays);
     }
   },
   
@@ -143,72 +149,25 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
       console.warn('[useOverlayStore] Cannot add overlay: no active file path.');
       return;
     }
-    
-    const defaultTitles: Record<string, string> = {
-      scratchpad: 'Sketchpad',
-      md: 'Markdown Viewer',
-      image: 'Image Viewer',
-      pdf: 'PDF Viewer',
-      word: 'Word Document',
-      notes: 'Notes'
-    };
-    const finalTitle = title || defaultTitles[type] || 'Overlay Window';
-
-    let finalContent = content;
-    if (!finalContent) {
-      if (type === 'scratchpad') {
-        finalContent = '[]';
-      } else if (type === 'notes') {
-        finalContent = 'New note...';
-      }
-    }
-
-    const defaultDimensions: Record<string, { w: number; h: number }> = {
-      scratchpad: { w: 500, h: 400 },
-      notes: { w: 450, h: 320 },
-      md: { w: 450, h: 450 },
-      image: { w: 480, h: 360 },
-      pdf: { w: 600, h: 500 },
-      word: { w: 400, h: 260 },
-      diff: { w: 750, h: 500 }
-    };
-    const dim = defaultDimensions[type] || { w: 400, h: 300 };
-
+    const finalTitle = getDefaultTitle(type, title);
+    const finalContent = getDefaultContent(type, content);
+    const dim = getDefaultDimensions(type);
     const overlays = get().overlays;
     const maxZ = overlays.reduce((max, o) => Math.max(max, o.zIndex), 0);
     
-    const staggerIndex = overlays.length;
-    const initialX = 100 + (staggerIndex * 35) % 250;
-    const initialY = 80 + (staggerIndex * 30) % 200;
-
-    const newOverlay: OverlayState = {
-      id: crypto.randomUUID(),
+    const newOverlay = createOverlayState({
       filePath,
       type,
       title: finalTitle,
       content: finalContent,
-      x: initialX,
-      y: initialY,
-      width: dim.w,
-      height: dim.h,
-      isMinimized: false,
-      isPinned: false,
-      opacity: 1.0,
-      isVisible: true,
-      zIndex: maxZ + 1
-    };
+      staggerIndex: overlays.length,
+      maxZ,
+      dim
+    });
     
     const nextOverlays = [...overlays, newOverlay];
     set({ overlays: nextOverlays });
-
-    try {
-      const fileOverlays = nextOverlays.filter(o => o.filePath === filePath);
-      await saveOverlaysBackend(filePath, fileOverlays);
-      const { emit } = await import('@tauri-apps/api/event');
-      await emit('overlays-updated');
-    } catch (err) {
-      console.error(`[useOverlayStore] Failed to auto-save overlay on add:`, err);
-    }
+    await saveOverlayState(filePath, nextOverlays);
   },
   
   closeOverlay: async (id: string) => {
@@ -218,112 +177,43 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     set({ overlays: nextOverlays });
     
     if (filePath && targetOverlay) {
-      try {
-        await deleteOverlayBackend(targetOverlay.filePath, id);
-        const { emit } = await import('@tauri-apps/api/event');
-        await emit('overlays-updated');
-      } catch (err) {
-        console.error(`[useOverlayStore] Failed to delete overlay from backend:`, err);
-        try {
-          const fileOverlays = nextOverlays.filter(o => o.filePath === targetOverlay.filePath);
-          await saveOverlaysBackend(targetOverlay.filePath, fileOverlays);
-          const { emit } = await import('@tauri-apps/api/event');
-          await emit('overlays-updated');
-        } catch (_) {}
-      }
+      await deleteOverlayState(targetOverlay.filePath, id, nextOverlays);
     }
   },
   
   minimizeOverlay: async (id: string) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, isMinimized: true } : o
-    );
-    set({ overlays: nextOverlays });
-
-    const target = nextOverlays.find(o => o.id === id);
-    if (target && target.filePath) {
-      const fileOverlays = nextOverlays.filter(o => o.filePath === target.filePath);
-      saveOverlaysBackend(target.filePath, fileOverlays)
-        .then(async () => {
-          const { emit } = await import('@tauri-apps/api/event');
-          await emit('overlays-updated');
-        })
-        .catch(() => {});
-    }
+    const nextOverlays = applyOverlayChange(set, get, id, o => ({ ...o, isMinimized: true }));
+    saveTargetOverlay(nextOverlays, id);
   },
   
   restoreOverlay: async (id: string) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, isMinimized: false } : o
-    );
-    set({ overlays: nextOverlays });
-    
+    const nextOverlays = applyOverlayChange(set, get, id, o => ({ ...o, isMinimized: false }));
     get().bringToFront(id);
-
-    const target = nextOverlays.find(o => o.id === id);
-    if (target && target.filePath) {
-      const fileOverlays = nextOverlays.filter(o => o.filePath === target.filePath);
-      saveOverlaysBackend(target.filePath, fileOverlays)
-        .then(async () => {
-          const { emit } = await import('@tauri-apps/api/event');
-          await emit('overlays-updated');
-        })
-        .catch(() => {});
-    }
+    saveTargetOverlay(nextOverlays, id);
   },
   
   togglePin: async (id: string) => {
-    const nextOverlays = get().overlays.map(o => {
-      if (o.id === id) {
-        return { ...o, isPinned: !o.isPinned };
-      }
-      return o;
-    });
-    set({ overlays: nextOverlays });
-
-    const target = nextOverlays.find(o => o.id === id);
-    if (target && target.filePath) {
-      const fileOverlays = nextOverlays.filter(o => o.filePath === target.filePath);
-      saveOverlaysBackend(target.filePath, fileOverlays)
-        .then(async () => {
-          const { emit } = await import('@tauri-apps/api/event');
-          await emit('overlays-updated');
-        })
-        .catch(() => {});
-    }
+    const nextOverlays = applyOverlayChange(set, get, id, o => ({ ...o, isPinned: !o.isPinned }));
+    saveTargetOverlay(nextOverlays, id);
   },
   
   updatePosition: (id: string, x: number, y: number) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, x, y } : o
-    );
-    set({ overlays: nextOverlays });
+    applyOverlayChange(set, get, id, o => ({ ...o, x, y }));
     triggerDebouncedSave(get);
   },
   
   updateSize: (id: string, w: number, h: number) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, width: w, height: h } : o
-    );
-    set({ overlays: nextOverlays });
+    applyOverlayChange(set, get, id, o => ({ ...o, width: w, height: h }));
     triggerDebouncedSave(get);
   },
 
   updateContent: (id: string, content: string) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, content } : o
-    );
-    set({ overlays: nextOverlays });
-    
+    applyOverlayChange(set, get, id, o => ({ ...o, content }));
     triggerDebouncedSave(get);
   },
   
   updateOverlay: (id: string, updates: Partial<OverlayState>) => {
-    const nextOverlays = get().overlays.map(o => 
-      o.id === id ? { ...o, ...updates } : o
-    );
-    set({ overlays: nextOverlays });
-    
+    applyOverlayChange(set, get, id, o => ({ ...o, ...updates }));
     triggerDebouncedSave(get);
   },
   
@@ -334,10 +224,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     
     const maxZ = overlays.reduce((max, o) => Math.max(max, o.zIndex), 0);
     if (target.zIndex < maxZ || overlays.length === 1) {
-      const nextOverlays = overlays.map(o => 
-        o.id === id ? { ...o, zIndex: maxZ + 1 } : o
-      );
-      set({ overlays: nextOverlays });
+      applyOverlayChange(set, get, id, o => ({ ...o, zIndex: maxZ + 1 }));
     }
   },
   
@@ -350,14 +237,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     set({ overlays: nextOverlays, showAll: nextShowAll });
 
     if (currentFilePath) {
-      try {
-        const fileOverlays = nextOverlays.filter(o => o.filePath === currentFilePath);
-        await saveOverlaysBackend(currentFilePath, fileOverlays);
-        const { emit } = await import('@tauri-apps/api/event');
-        await emit('overlays-updated');
-      } catch (err) {
-        console.error('[useOverlayStore] Failed to save show all overlays:', err);
-      }
+      await saveOverlayState(currentFilePath, nextOverlays);
     }
   },
   

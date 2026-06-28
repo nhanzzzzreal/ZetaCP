@@ -30,7 +30,7 @@ export const OverlayWidgetRenderer: React.FC<OverlayWidgetRendererProps> = ({ ov
     
     default:
       return (
-        <div className="p-4 text-xs text-neutral-400 bg-[#1e1e1e] h-full flex items-center justify-center select-none">
+        <div className="p-4 text-xs text-neutral-400 bg-[#2a2a2a] h-full flex items-center justify-center select-none">
           Unsupported widget type: {overlay.type}
         </div>
       );

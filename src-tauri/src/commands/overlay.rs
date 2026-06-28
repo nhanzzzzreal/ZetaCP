@@ -90,7 +90,9 @@ pub async fn save_overlays(
     overlays: Vec<OverlayState>,
     state: State<'_, AppState>,
 ) -> Result<(), ZetaError> {
-    let proj_db = state.get_db_pool(&file_path, true).await?.unwrap();
+    let proj_db = state.get_db_pool(&file_path, true).await?.ok_or_else(|| {
+        ZetaError::Database("Không thể khởi tạo database pool".to_string())
+    })?;
 
     let mut tx = proj_db.begin().await?;
 
@@ -135,7 +137,9 @@ pub async fn delete_overlay(
     id: String,
     state: State<'_, AppState>,
 ) -> Result<(), ZetaError> {
-    let proj_db = state.get_db_pool(&file_path, true).await?.unwrap();
+    let proj_db = state.get_db_pool(&file_path, true).await?.ok_or_else(|| {
+        ZetaError::Database("Không thể khởi tạo database pool".to_string())
+    })?;
 
     sqlx::query("DELETE FROM OverlayState WHERE id = ?")
         .bind(&id)

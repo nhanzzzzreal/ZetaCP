@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { TestcaseMeta, TestcaseResult, TestcaseData } from '../../types/testcase';
 import { TestcaseItem } from './TestcaseItem';
 import { useTestcaseStore } from '../../stores/useTestcaseStore';
+import { VirtualizedWrapper } from '../Common/VirtualizedWrapper';
+import { calculateSubtaskStatus, SubtaskStatusBadge } from './SubtaskStatusBadge';
 
 interface SubtaskGroupProps {
   subtask: {
@@ -18,7 +20,6 @@ interface SubtaskGroupProps {
   testcaseIndexMap: Map<string, number>;
   isRunning: boolean;
   onToggleExpand: (id: string) => void;
-  // If true, this is rendered in a flat list without a header (when no subtasks exist)
   isFlatView?: boolean;
 }
 
@@ -35,63 +36,8 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Calculate aggregated status of the subtask
-  // Only count active testcases (since inactive ones are never run/scored)
-  const testcasesToCount = subtask.testcases.filter(t => t.isActive);
-  const totalActive = testcasesToCount.length;
-  
-  let subtaskStatus: 'AC' | 'WA' | 'PENDING' | 'NONE' = 'NONE';
-  let acCount = 0;
-  let hasPending = false;
-  let hasFail = false;
+  const subtaskStatus = calculateSubtaskStatus(subtask.testcases, results);
 
-  testcasesToCount.forEach(meta => {
-    const res = results.get(meta.id);
-    if (res?.lastStatus === 'PENDING' || res?.lastStatus === 'QUEUED') {
-      hasPending = true;
-    } else if (res?.lastStatus === 'AC') {
-      acCount++;
-    } else if (res?.lastStatus) {
-      hasFail = true;
-    }
-  });
-
-  if (totalActive > 0) {
-    if (hasPending) {
-      subtaskStatus = 'PENDING';
-    } else if (acCount === totalActive) {
-      subtaskStatus = 'AC';
-    } else if (hasFail || acCount < totalActive) {
-      subtaskStatus = 'WA';
-    }
-  }
-
-  const getStatusBadge = () => {
-    switch (subtaskStatus) {
-      case 'AC':
-        return (
-          <span className="inline-flex items-center text-[10px] font-bold text-[var(--zcp-verdict-ac)] bg-[rgba(34,197,94,0.18)] px-1.5 py-0.5 rounded-[2px] font-sans select-none shrink-0">
-            PASSED
-          </span>
-        );
-      case 'WA':
-        return (
-          <span className="inline-flex items-center text-[10px] font-bold text-[var(--zcp-verdict-wa)] bg-[rgba(239,68,68,0.18)] px-1.5 py-0.5 rounded-[2px] font-sans select-none shrink-0">
-            FAILED
-          </span>
-        );
-      case 'PENDING':
-        return (
-          <span className="inline-flex items-center text-[10px] font-bold text-[var(--zcp-accent)] bg-[rgba(0,122,204,0.18)] animate-pulse px-1.5 py-0.5 rounded-[2px] font-sans select-none shrink-0">
-            RUNNING
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  // Drag and Drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     if (isFlatView || isRunning) return;
     e.preventDefault();
@@ -117,16 +63,22 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
     }
   };
 
+  const sortedTestcases = React.useMemo(() => {
+    return subtask.testcases.slice().sort((a, b) => a.orderIndex - b.orderIndex);
+  }, [subtask.testcases]);
+
   const listContent = (
-    <div className="p-1 bg-transparent border-t border-[var(--zcp-border)]">
-      {subtask.testcases.length === 0 ? (
+    <div className={isFlatView ? "bg-transparent" : "p-1 bg-transparent border-t border-[var(--zcp-border)]"}>
+      {sortedTestcases.length === 0 ? (
         <div className="text-center py-4 text-[var(--zcp-text-muted)] text-[10px] font-medium italic">
           No testcases. Drag and drop here to add.
         </div>
       ) : (
-        subtask.testcases
-          .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map((meta) => {
+        <VirtualizedWrapper
+          mode="list"
+          data={sortedTestcases}
+          height={Math.min(sortedTestcases.length * 52, 450)}
+          itemContent={(_index, meta) => {
             const data = loadedData.get(meta.id) || null;
             const result = results.get(meta.id) || null;
             const seqIndex = testcaseIndexMap.get(meta.id) ?? 0;
@@ -143,7 +95,8 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
                 onToggleExpand={onToggleExpand}
               />
             );
-          })
+          }}
+        />
       )}
     </div>
   );
@@ -165,7 +118,6 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
       }`}
     >
       <div className={isDragOver ? "pointer-events-none" : ""}>
-        {/* Subtask Header */}
         <div 
           className={`flex items-center justify-between px-3 py-1.5 cursor-pointer group transition-colors duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] ${
             isDragOver ? 'bg-[var(--zcp-hover-bg)]' : 'bg-[var(--zcp-bg-sidebar)]/80 hover:bg-[var(--zcp-hover-bg)]/30'
@@ -187,20 +139,16 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
               ({subtask.testcases.length})
             </span>
 
-            {/* Score Display */}
             {subtask.maxScore !== undefined && (
               <span className="px-1.5 py-[1px] text-[9px] font-bold bg-[var(--zcp-bg-editor)] text-[var(--zcp-text-secondary)] rounded-[var(--zcp-radius-sm)] border border-[var(--zcp-border)] shrink-0">
                 {subtask.maxScore} pts
               </span>
             )}
 
-            {/* Aggregated Status Badge */}
-            {getStatusBadge()}
+            <SubtaskStatusBadge status={subtaskStatus} />
           </div>
 
-          {/* Action buttons */}
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            {/* Run/Stop subtask button */}
             {subtask.testcases.length > 0 && (
               subtaskStatus === 'PENDING' ? (
                 <button
@@ -222,7 +170,6 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
               )
             )}
 
-            {/* Delete subtask button */}
             {subtask.id !== null && (
               <button
                 onClick={() => {
@@ -240,7 +187,6 @@ export const SubtaskGroup: React.FC<SubtaskGroupProps> = React.memo(({
           </div>
         </div>
 
-        {/* Testcases List */}
         {!isCollapsed && listContent}
       </div>
     </div>

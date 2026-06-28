@@ -8,7 +8,31 @@ pub mod commands;
 
 pub fn resolve_portable_path(path_str: &str) -> String {
     let path = std::path::Path::new(path_str);
-    if path.is_absolute() || (!path_str.contains('/') && !path_str.contains('\\')) {
+    if path.is_absolute() {
+        return path_str.to_string();
+    }
+
+    if path_str == "python" {
+        if let Ok(mut exe_dir) = std::env::current_exe() {
+            exe_dir.pop();
+            let portable = exe_dir.join("python-3.12.7").join("python.exe");
+            if portable.exists() {
+                return portable.to_string_lossy().to_string();
+            }
+        }
+    }
+
+    if path_str == "g++" {
+        if let Ok(mut exe_dir) = std::env::current_exe() {
+            exe_dir.pop();
+            let portable = exe_dir.join("w64devkit").join("bin").join("g++.exe");
+            if portable.exists() {
+                return portable.to_string_lossy().to_string();
+            }
+        }
+    }
+
+    if !path_str.contains('/') && !path_str.contains('\\') {
         return path_str.to_string();
     }
     if let Ok(mut exe_dir) = std::env::current_exe() {
@@ -52,10 +76,10 @@ use crate::state::AppState;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let _ = tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::WARN)
+        .with_max_level(tracing::Level::INFO)
         .try_init();
 
-    tauri::Builder::default()
+    if let Err(e) = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -74,7 +98,7 @@ pub fn run() {
                 match crate::db::open_db(&settings_db_str).await {
                     Ok(p) => {
                         tracing::info!("Đã mở settings DB thành công tại: {}", settings_db_str);
-                        p
+                        Ok(p)
                     }
                     Err(e) => {
                         tracing::error!("Không thể mở settings DB: {}. Chuyển sang RAM-only DB.", e);
@@ -85,10 +109,10 @@ pub fn run() {
                             .foreign_keys(true);
                         sqlx::SqlitePool::connect_with(options)
                             .await
-                            .expect("Không thể tạo RAM-only DB fallback")
+                            .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
                     }
                 }
-            });
+            })?;
 
             // Đưa AppState vào quản lý của Tauri
             app.manage(AppState {
@@ -96,8 +120,12 @@ pub fn run() {
                 project_dbs: Mutex::new(std::collections::HashMap::new()),
                 project_root: Mutex::new(None),
                 judge_handle: Mutex::new(None),
+                stress_handle: Mutex::new(None),
                 file_watcher: Mutex::new(None),
                 lsp_instances: Mutex::new(std::collections::HashMap::new()),
+                stress_pause_notify: Mutex::new(None),
+                stress_paused: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                stress_cancel: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             });
 
             Ok(())
@@ -158,8 +186,15 @@ pub fn run() {
             crate::commands::lsp::lsp_get_hover,
             crate::commands::lsp::lsp_get_definition,
             crate::commands::docs::open_docs_window,
-            crate::commands::docs::get_docs_path
+            crate::commands::docs::get_docs_path,
+            crate::commands::stress_test::run_stress_test,
+            crate::commands::stress_test::stop_stress_test,
+            crate::commands::stress_test::resume_stress_test,
+            crate::commands::stress_test::install_testlib
         ])
         .run(tauri::generate_context!())
-        .expect("gặp lỗi khi khởi động ứng dụng tauri");
+    {
+        tracing::error!("gặp lỗi khi khởi động ứng dụng tauri: {}", e);
+        std::process::exit(1);
+    }
 }

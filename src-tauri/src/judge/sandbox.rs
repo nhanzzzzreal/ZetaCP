@@ -22,6 +22,15 @@ unsafe impl Send for SendHandle {}
 #[cfg(target_os = "windows")]
 unsafe impl Sync for SendHandle {}
 
+#[cfg(target_os = "windows")]
+impl Drop for SendHandle {
+    fn drop(&mut self) {
+        unsafe {
+            let _ = windows::Win32::Foundation::CloseHandle(self.0);
+        }
+    }
+}
+
 pub struct ProcessConfig<'a> {
     pub exec_path: &'a str,
     pub args: &'a [String],
@@ -59,7 +68,8 @@ pub async fn run_in_sandbox(cfg: ProcessConfig<'_>) -> Result<ProcessOutput, std
                 let mut limit_info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
                 limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
 
-                if cfg.memory_limit_kb > 0 {
+                let is_python_exec = cfg.exec_path.to_lowercase().contains("python");
+                if cfg.memory_limit_kb > 0 && !is_python_exec {
                     limit_info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY | JOB_OBJECT_LIMIT_JOB_MEMORY;
                     let limit_bytes = cfg.memory_limit_kb as usize * 1024;
                     limit_info.ProcessMemoryLimit = limit_bytes;
@@ -115,12 +125,11 @@ pub async fn run_in_sandbox(cfg: ProcessConfig<'_>) -> Result<ProcessOutput, std
 
     // --- Windows: Assign spawned process to Job Object ---
     #[cfg(target_os = "windows")]
-    if let Some(SendHandle(job)) = job_handle {
+    if let Some(ref sh) = job_handle {
         if let Some(raw_proc_handle) = child.raw_handle() {
             let proc_handle = HANDLE(raw_proc_handle as *mut _);
             unsafe {
-                if let Err(e) = AssignProcessToJobObject(job, proc_handle) {
-                    let _ = windows::Win32::Foundation::CloseHandle(job);
+                if let Err(e) = AssignProcessToJobObject(sh.0, proc_handle) {
                     let _ = child.kill().await;
                     return Err(std::io::Error::other(
                         format!("Failed to assign process to Job Object: {:?}", e)
@@ -141,17 +150,16 @@ pub async fn run_in_sandbox(cfg: ProcessConfig<'_>) -> Result<ProcessOutput, std
     
     // --- Windows: Query memory usage from Job Object ---
     #[cfg(target_os = "windows")]
-    let memory_kb = if let Some(SendHandle(job)) = job_handle {
+    let memory_kb = if let Some(ref sh) = job_handle {
         unsafe {
             let mut info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
             let query_res = QueryInformationJobObject(
-                job,
+                sh.0,
                 JobObjectExtendedLimitInformation,
                 &mut info as *mut _ as *mut _,
                 std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
                 None,
             );
-            let _ = windows::Win32::Foundation::CloseHandle(job);
             
             if query_res.is_ok() {
                 // PeakJobMemoryUsed is in bytes, convert to KB

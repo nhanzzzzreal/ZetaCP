@@ -9,4 +9,5 @@ pub mod overlay;
 pub mod lsp;
 pub mod snippets;
 pub mod docs;
+pub mod stress_test;
 

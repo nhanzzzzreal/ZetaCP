@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { GlobalSettings } from '../types/settings';
 import { loadSettings as apiLoadSettings, saveSettings as apiSaveSettings } from '../lib/tauri-bridge';
+import { notify } from './useNotificationStore';
 
 interface SettingsState {
   settings: GlobalSettings | null;
@@ -24,6 +25,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       set({ settings });
     } catch (err) {
       console.error('Failed to load settings:', err);
+      notify.fromTauriError('Lỗi tải Settings', err);
     }
   },
   saveSettings: async (newSettings) => {
@@ -32,6 +34,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       set({ settings: newSettings });
     } catch (err) {
       console.error('Failed to save settings:', err);
+      notify.fromTauriError('Lỗi lưu Settings', err);
     }
   },
   openSettings: () => set({ isSettingsOpen: true }),

@@ -69,6 +69,7 @@ Zexample/
 ZETACP_GUIDE.md
 zeta_cp_resume.md
 task.md
+.agent
 
 # LSP debug logs
 lsp_debug.log

@@ -1,30 +1,39 @@
 // src-tauri/src/db/mod.rs
 
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
+pub mod repository;
+pub mod global_repo;
+
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
 use sqlx::SqlitePool;
 use crate::errors::ZetaError;
+use std::time::Duration;
 
 pub async fn open_db(path: &str) -> Result<SqlitePool, ZetaError> {
     let options = SqliteConnectOptions::new()
         .filename(path)
         .create_if_missing(true)
         .journal_mode(SqliteJournalMode::Wal)  // WAL: cho phép đọc song song khi write
+        .synchronous(SqliteSynchronous::Normal) // Safe & performant in WAL mode
+        .busy_timeout(Duration::from_secs(10))  // Wait up to 10s on lock contention
         .foreign_keys(true);
 
-    match SqlitePool::connect_with(options).await {
-        Ok(pool) => {
-            run_migrations(&pool).await?;
-            Ok(pool)
-        }
-        Err(e) => {
+    let pool = sqlx::sqlite::SqlitePoolOptions::new()
+        .max_connections(10)
+        .min_connections(1)
+        .acquire_slow_threshold(Duration::from_secs(60))
+        .connect_with(options)
+        .await
+        .map_err(|e| {
             let err_str = e.to_string();
             if err_str.contains("readonly") || err_str.contains("permission") || err_str.contains("Access is denied") {
-                Err(ZetaError::DbReadOnly { path: path.to_string() })
+                ZetaError::DbReadOnly { path: path.to_string() }
             } else {
-                Err(ZetaError::Database(err_str))
+                ZetaError::Database(err_str)
             }
-        }
-    }
+        })?;
+
+    run_migrations(&pool).await?;
+    Ok(pool)
 }
 
 pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ZetaError> {
@@ -46,6 +55,12 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ZetaError> {
         (5, include_str!("migrations/v5.sql")),
         (6, include_str!("migrations/v6.sql")),
         (7, include_str!("migrations/v7.sql")),
+        (8, include_str!("migrations/v8.sql")),
+        (9, include_str!("migrations/v9.sql")),
+        (10, include_str!("migrations/v10.sql")),
+        (11, include_str!("migrations/v11.sql")),
+        (12, include_str!("migrations/v12.sql")),
+        (13, include_str!("migrations/v13.sql")),
     ];
 
     for (version, sql) in migrations {

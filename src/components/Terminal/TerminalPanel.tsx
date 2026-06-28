@@ -19,13 +19,13 @@ export const TerminalPanel: React.FC = () => {
       cursorBlink: true,
       cursorStyle: 'underline',
       fontFamily: 'Consolas, Menlo, Monaco, "Courier New", monospace',
-      fontSize: 12,
-      lineHeight: 1.25,
+      fontSize: 14,
+      lineHeight: 1.35,
       theme: {
-        background: '#1f1f1f',
+        background: '#1e1e1e',
         foreground: '#cccccc',
         cursor: '#aeafad',     // neutral muted grey/blue cursor
-        selectionBackground: 'rgba(174, 175, 173, 0.3)',
+        selectionBackground: 'rgba(38, 79, 120, 0.5)',
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -86,7 +86,7 @@ export const TerminalPanel: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full h-full bg-[#1f1f1f] p-2 overflow-hidden flex flex-col">
+    <div className="w-full h-full bg-[var(--zcp-bg-editor)] p-3 overflow-hidden flex flex-col">
       <div ref={containerRef} className="w-full h-full min-h-0" />
     </div>
   );

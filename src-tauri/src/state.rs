@@ -9,8 +9,12 @@ pub struct AppState {
     pub project_dbs: Mutex<HashMap<String, SqlitePool>>,  // Cache pools kết nối ZetaCP.db theo thư mục cha
     pub project_root: Mutex<Option<String>>,    // Đường dẫn tuyệt đối của project đang mở
     pub judge_handle: Mutex<Option<tokio::task::JoinHandle<()>>>, // Handle để dừng judge
+    pub stress_handle: Mutex<Option<tokio::task::JoinHandle<()>>>, // Handle để dừng stress test
     pub file_watcher: Mutex<Option<RecommendedWatcher>>, // Watcher quản lý thay đổi file
     pub lsp_instances: Mutex<HashMap<String, std::sync::Arc<crate::commands::lsp::LspServerInstance>>>,
+    pub stress_pause_notify: Mutex<Option<std::sync::Arc<tokio::sync::Notify>>>,
+    pub stress_paused: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub stress_cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl AppState {

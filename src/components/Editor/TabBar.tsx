@@ -3,6 +3,7 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { getFileIcon } from '../../lib/fileIcons';
+import { getTabTitles } from './tabHelpers';
 
 export const TabBar: React.FC = () => {
   const openTabs = useProjectStore((state) => state.openTabs);
@@ -59,97 +60,7 @@ export const TabBar: React.FC = () => {
   };
 
   // Resolve unique display titles for each tab (VS Code style suffix path for duplicates)
-  const tabTitles = useMemo(() => {
-    const titles: Record<string, string> = {};
-    const groups: Record<string, string[]> = {};
-
-    openTabs.forEach((p) => {
-      const pClean = p.replace(/\\/g, '/');
-      const filename = pClean.split('/').pop() || pClean;
-      const lastDotIdx = filename.lastIndexOf('.');
-      const baseNameWithoutExt = lastDotIdx <= 0 ? filename : filename.substring(0, lastDotIdx);
-
-      if (!groups[baseNameWithoutExt]) {
-        groups[baseNameWithoutExt] = [];
-      }
-      groups[baseNameWithoutExt].push(p);
-    });
-
-    Object.entries(groups).forEach(([_, paths]) => {
-      if (paths.length === 1) {
-        const p = paths[0];
-        const pClean = p.replace(/\\/g, '/');
-        titles[p] = pClean.split('/').pop() || p;
-        return;
-      }
-
-      // Collect parent paths for all files in this baseName group
-      const parentPathsOfGroup = paths.map((p) => {
-        const pClean = p.replace(/\\/g, '/');
-        const parts = pClean.split('/');
-        return parts.slice(0, -1).join('/');
-      });
-
-      const uniqueParentPaths = Array.from(new Set(parentPathsOfGroup));
-
-      // If all files are in the same folder, just show the filename with extension
-      if (uniqueParentPaths.length <= 1) {
-        paths.forEach((p) => {
-          const pClean = p.replace(/\\/g, '/');
-          titles[p] = pClean.split('/').pop() || p;
-        });
-        return;
-      }
-
-      // Find the shortest unique suffix for each parent path in this group
-      const parentPathSuffixes: Record<string, string> = {};
-
-      uniqueParentPaths.forEach((parentPath) => {
-        const parts = parentPath.split('/');
-        let depth = 1;
-        let suffix = '';
-
-        while (depth <= parts.length) {
-          const candidate = parts.slice(-depth).join('/');
-          const isUnique = uniqueParentPaths.every((otherPath) => {
-            if (otherPath === parentPath) return true;
-            const otherParts = otherPath.split('/');
-            const otherCandidate = otherParts.slice(-depth).join('/');
-            return candidate !== otherCandidate;
-          });
-
-          if (isUnique) {
-            suffix = candidate;
-            break;
-          }
-          depth++;
-        }
-
-        if (!suffix) {
-          suffix = parentPath;
-        }
-
-        parentPathSuffixes[parentPath] = suffix;
-      });
-
-      // Construct tab display title: distinguishing_suffix/filename.ext
-      paths.forEach((p) => {
-        const pClean = p.replace(/\\/g, '/');
-        const parts = pClean.split('/');
-        const filename = parts[parts.length - 1];
-        const parentPath = parts.slice(0, -1).join('/');
-        const suffix = parentPathSuffixes[parentPath];
-
-        if (suffix) {
-          titles[p] = `${suffix}/${filename}`;
-        } else {
-          titles[p] = filename;
-        }
-      });
-    });
-
-    return titles;
-  }, [openTabs]);
+  const tabTitles = useMemo(() => getTabTitles(openTabs), [openTabs]);
 
   if (openTabs.length === 0) return null;
 
@@ -157,7 +68,7 @@ export const TabBar: React.FC = () => {
     <div 
       ref={tabBarRef}
       onWheel={handleTabBarWheel}
-      className="flex bg-[var(--zcp-bg-sidebar)] overflow-x-auto select-none tab-bar-scrollbar h-[var(--zcp-tab-height)] items-stretch border-b border-[var(--zcp-border)]"
+      className="flex bg-[var(--zcp-bg-sidebar)] overflow-x-auto select-none tab-bar-scrollbar h-[var(--zcp-tab-height)] items-stretch"
     >
       {openTabs.map((tab, index) => {
         const isActive = activeFile === tab;
@@ -185,24 +96,22 @@ export const TabBar: React.FC = () => {
             style={{ WebkitUserDrag: 'element' } as React.CSSProperties}
             className={`flex items-center gap-2 px-3 border-t-2 h-full cursor-pointer transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] shrink-0 select-none border-r border-[var(--zcp-border)] group focus-visible-outline ${
               isActive
-                ? 'bg-[var(--zcp-bg-tab-active)] text-[var(--zcp-text-active)] border-t-[var(--zcp-focus-border)] font-semibold'
-                : 'bg-[var(--zcp-bg-tab-inactive)] text-[var(--zcp-text-secondary)] border-t-transparent hover:bg-[var(--zcp-hover-bg)] hover:text-[var(--zcp-text-active)]'
+                ? 'bg-[var(--zcp-bg-tab-active)] text-[var(--zcp-text-active)] border-t-[var(--zcp-focus-border)] border-b border-b-[var(--zcp-bg-tab-active)]'
+                : 'bg-[var(--zcp-bg-tab-inactive)] text-[var(--zcp-text-secondary)] border-t-transparent border-b border-b-[var(--zcp-border)] hover:bg-[var(--zcp-hover-bg)] hover:text-[var(--zcp-text-active)]'
             } ${isDragged ? 'opacity-30 bg-[var(--zcp-bg-tab-inactive)]' : ''}`}
           >
             {/* File icon */}
-            {getFileIcon(tab, isActive, 13)}
+            {getFileIcon(tab, isActive, 16)}
 
             <div className="flex items-center min-w-0">
-              <span className="truncate max-w-[180px] text-xs">{displayTitle}</span>
+              <span className="truncate max-w-[180px] text-[13px]">{displayTitle}</span>
             </div>
 
             {/* Unsaved / close indicator (VS Code-style dot changing to X on hover) */}
             <div className="relative w-4 h-4 ml-1 flex items-center justify-center shrink-0">
               {dirtyFiles[tab] ? (
                 <div className="relative w-4 h-4 flex items-center justify-center group/close">
-                  <span className="absolute text-[8px] text-[var(--zcp-text-secondary)] group-hover/close:opacity-0 transition-opacity">
-                    ●
-                  </span>
+                  <div className="absolute w-2 h-2 rounded-full bg-[var(--zcp-text-secondary)] group-hover/close:opacity-0 transition-opacity" />
                   <span
                     role="button"
                     tabIndex={-1}
@@ -234,6 +143,7 @@ export const TabBar: React.FC = () => {
           </button>
         );
       })}
+      <div className="flex-1 border-b border-[var(--zcp-border)]" />
     </div>
   );
 };

@@ -76,18 +76,18 @@ export const StandaloneOverlayWindow: React.FC<StandaloneOverlayWindowProps> = (
 
   if (!overlay) {
     return (
-      <div className="flex h-screen w-screen bg-[#1e1e1e] text-neutral-500 items-center justify-center text-xs font-sans select-none">
+      <div className="flex h-screen w-screen bg-[#2a2a2a] text-neutral-500 items-center justify-center text-xs font-sans select-none">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#1f1f1f] text-neutral-100 overflow-hidden font-sans select-none rounded-sm border border-[#2b2b2b]">
+    <div className="flex flex-col h-screen w-screen bg-[#2a2a2a] text-neutral-100 overflow-hidden font-sans select-none rounded-sm border border-[#2b2b2b]">
 
       {/* ── Custom Titlebar (Drag Region) ────────────────────────────────── */}
       <div
-        className="flex items-center justify-between h-8 bg-[#181818] border-b border-[#2b2b2b] shrink-0 cursor-move"
+        className="flex items-center justify-between h-8 bg-[#202020] border-b border-[#2b2b2b] shrink-0 cursor-move"
         data-tauri-drag-region
         onDoubleClick={() => sendAction('toggle-maximize')}
       >
@@ -148,7 +148,7 @@ export const StandaloneOverlayWindow: React.FC<StandaloneOverlayWindowProps> = (
       </div>
 
       {/* ── Widget Content ────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 bg-[#1e1e1e] text-neutral-300 relative text-sm flex flex-col">
+      <div className="flex-1 min-h-0 bg-[#2a2a2a] text-neutral-300 relative text-sm flex flex-col">
         <OverlayWidgetRenderer overlay={overlay} />
       </div>
     </div>

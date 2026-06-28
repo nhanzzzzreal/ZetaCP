@@ -1,20 +1,12 @@
-// src/components/Overlay/widgets/NotificationCenter.tsx
-
 import React, { useState } from 'react';
 import { 
-  Info, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Terminal, 
-  Cpu, 
-  Layers, 
   Search, 
   Trash2,
   ListRestart
 } from 'lucide-react';
 import { useOverlayStore, OverlayLog } from '../../../stores/useOverlayStore';
 import { useTestcaseStore } from '../../../stores/useTestcaseStore';
+import { getLogIcon, getSourceBadge } from './NotificationHelpers';
 
 export const NotificationCenter: React.FC = () => {
   const { logs, clearLogs } = useOverlayStore();
@@ -37,47 +29,6 @@ export const NotificationCenter: React.FC = () => {
     return log.source === activeTab;
   });
 
-  const getLogIcon = (type: OverlayLog['type']) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
-      case 'error':
-        return <XCircle className="w-4 h-4 text-rose-500 shrink-0" />;
-      case 'info':
-      default:
-        return <Info className="w-4 h-4 text-indigo-400 shrink-0" />;
-    }
-  };
-
-  const getSourceBadge = (source: OverlayLog['source']) => {
-    switch (source) {
-      case 'compiler':
-        return (
-          <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#1e293b] text-indigo-300 border border-indigo-900 rounded flex items-center gap-1">
-            <Terminal className="w-2.5 h-2.5" />
-            COMPILER
-          </span>
-        );
-      case 'judge':
-        return (
-          <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#162a22] text-emerald-300 border border-emerald-900 rounded flex items-center gap-1">
-            <Cpu className="w-2.5 h-2.5" />
-            JUDGE
-          </span>
-        );
-      case 'system':
-      default:
-        return (
-          <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#27272a] text-zinc-300 border border-zinc-700 rounded flex items-center gap-1">
-            <Layers className="w-2.5 h-2.5" />
-            SYSTEM
-          </span>
-        );
-    }
-  };
-
   // Compile Stderr diagnostics
   const compileLogs = logs.filter((l: OverlayLog) => l.source === 'compiler' && l.type === 'error');
 
@@ -92,7 +43,7 @@ export const NotificationCenter: React.FC = () => {
   const ceCount = resultsArr.filter(r => r.lastStatus === 'CE').length;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#181818] text-neutral-300 font-sans text-xs overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[#2a2a2a] text-neutral-300 font-sans text-xs overflow-hidden">
       {/* Diagnostics summary bar */}
       <div className="bg-[#202020] border-b border-[#2d2d2d] px-3 py-2 flex flex-wrap gap-3 items-center shrink-0">
         <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Judge Status:</span>
@@ -108,7 +59,7 @@ export const NotificationCenter: React.FC = () => {
       </div>
 
       {/* Tabs and Controls */}
-      <div className="h-9 px-3 border-b border-[#2d2d2d] flex items-center justify-between bg-[#1f1f1f] shrink-0">
+      <div className="h-9 px-3 border-b border-[#2d2d2d] flex items-center justify-between bg-[#202020] shrink-0">
         <div className="flex items-stretch h-full gap-1">
           <button
             onClick={() => setActiveTab('all')}
@@ -144,7 +95,7 @@ export const NotificationCenter: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {/* Search bar */}
-          <div className="relative flex items-center bg-[#252526] border border-[#2d2d2d] rounded px-2 py-1 gap-1.5 focus-within:border-indigo-500 transition-colors w-40 sm:w-48">
+          <div className="relative flex items-center bg-[#1a1a1a] border border-[#2d2d2d] rounded px-2 py-1 gap-1.5 focus-within:border-indigo-500 transition-colors w-40 sm:w-48">
             <Search className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
             <input
               type="text"
@@ -172,7 +123,7 @@ export const NotificationCenter: React.FC = () => {
           filteredLogs.map((log: OverlayLog) => (
             <div 
               key={log.id} 
-              className={`p-2 rounded border border-[#2b2b2b] bg-[#1e1e1e] hover:bg-neutral-800/30 transition-colors duration-150 flex flex-col gap-1`}
+              className={`p-2 rounded border border-[#2b2b2b] bg-[#202020] hover:bg-neutral-800/30 transition-colors duration-150 flex flex-col gap-1`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
@@ -187,7 +138,7 @@ export const NotificationCenter: React.FC = () => {
               
               {log.details && (
                 <pre 
-                  className="mt-1 p-1.5 bg-[#151515] border border-[#27272a] text-neutral-400 font-mono text-[10px] rounded overflow-x-auto whitespace-pre-wrap max-h-32 select-text selection:bg-[#264f78]"
+                  className="mt-1 p-1.5 bg-[#131313] border border-[#27272a] text-neutral-400 font-mono text-[10px] rounded overflow-x-auto whitespace-pre-wrap max-h-32 select-text selection:bg-[#264f78]"
                 >
                   {log.details}
                 </pre>

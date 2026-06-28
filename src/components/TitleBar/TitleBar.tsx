@@ -49,7 +49,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
 
   return (
     <div
-      className="titlebar h-8 bg-[var(--zcp-bg-editor)] border-b border-[var(--zcp-border)] flex items-center justify-between select-none shrink-0 font-sans z-50"
+      className="titlebar h-[35px] bg-[var(--zcp-bg-titlebar-active)] border-b border-[var(--zcp-border)] flex items-center justify-between select-none shrink-0 font-[var(--zcp-font-ui)] z-50"
       data-tauri-drag-region
       onDoubleClick={handleDoubleClick}
     >
@@ -62,7 +62,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
           data-tauri-drag-region
         />
         <span
-          className="text-[var(--zcp-text-primary)] font-bold text-xs tracking-wider"
+          className="text-[var(--zcp-text-primary)] font-medium text-[13px]"
           data-tauri-drag-region
         >
           ZetaCP
@@ -75,7 +75,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
         <div className="flex items-center gap-0.5 px-1.5 mr-1">
           <button
             onClick={onToggleLeftPanel}
-            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[14px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
+            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[16px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
               leftPanelOpen
                 ? 'text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)]'
                 : 'text-[var(--zcp-text-secondary)] hover:bg-[var(--zcp-hover-bg)]/50 hover:text-[var(--zcp-text-active)]'
@@ -86,7 +86,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
           </button>
           <button
             onClick={onToggleTerminal}
-            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[14px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
+            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[16px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
               terminalOpen
                 ? 'text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)]'
                 : 'text-[var(--zcp-text-secondary)] hover:bg-[var(--zcp-hover-bg)]/50 hover:text-[var(--zcp-text-active)]'
@@ -97,7 +97,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
           </button>
           <button
             onClick={onToggleRightPanel}
-            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[14px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
+            className={`p-1.5 rounded-[var(--zcp-radius-sm)] text-[16px] transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-pointer ${
               rightPanelOpen
                 ? 'text-[var(--zcp-text-active)] hover:bg-[var(--zcp-hover-bg)]'
                 : 'text-[var(--zcp-text-secondary)] hover:bg-[var(--zcp-hover-bg)]/50 hover:text-[var(--zcp-text-active)]'

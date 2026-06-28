@@ -63,7 +63,11 @@ pub fn docs_protocol_handler<R: tauri::Runtime>(
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("content-type", "text/plain")
                 .body(Cow::Owned(format!("Failed to locate executable: {}", e).into_bytes()))
-                .unwrap();
+                .unwrap_or_else(|_| {
+                    let mut r = Response::new(Cow::Borrowed(&b""[..]));
+                    *r.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+                    r
+                });
         }
     };
     exe_dir.pop();
@@ -83,7 +87,11 @@ pub fn docs_protocol_handler<R: tauri::Runtime>(
             .status(StatusCode::NOT_FOUND)
             .header("content-type", "text/plain")
             .body(Cow::Borrowed(&b"Not Found"[..]))
-            .unwrap();
+            .unwrap_or_else(|_| {
+                let mut r = Response::new(Cow::Borrowed(&b""[..]));
+                *r.status_mut() = StatusCode::NOT_FOUND;
+                r
+            });
     }
 
     let body = match std::fs::read(&file_path) {
@@ -93,7 +101,11 @@ pub fn docs_protocol_handler<R: tauri::Runtime>(
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("content-type", "text/plain")
                 .body(Cow::Owned(format!("Failed to read file: {}", e).into_bytes()))
-                .unwrap();
+                .unwrap_or_else(|_| {
+                    let mut r = Response::new(Cow::Borrowed(&b""[..]));
+                    *r.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+                    r
+                });
         }
     };
 
@@ -117,7 +129,9 @@ pub fn docs_protocol_handler<R: tauri::Runtime>(
         .status(StatusCode::OK)
         .header("content-type", mime_type)
         .body(Cow::Owned(body))
-        .unwrap()
+        .unwrap_or_else(|_| {
+            Response::new(Cow::Borrowed(&b""[..]))
+        })
 }
 
 #[tauri::command]

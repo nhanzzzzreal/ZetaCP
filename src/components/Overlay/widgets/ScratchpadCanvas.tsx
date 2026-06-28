@@ -55,7 +55,7 @@ export const ScratchpadCanvas: React.FC<ScratchpadCanvasProps> = ({ id, initialC
   };
 
   return (
-    <div className="flex-1 h-full w-full bg-[#1e1e1e] overflow-hidden relative select-none">
+    <div className="flex-1 h-full w-full bg-[#2a2a2a] overflow-hidden relative select-none">
       {/* Nhúng Tldraw editor full-size */}
       <Tldraw 
         onMount={handleMount}

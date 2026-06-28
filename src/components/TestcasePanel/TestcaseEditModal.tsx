@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CodeMirrorEditor } from './CodeMirrorEditor';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface TestcaseEditModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface TestcaseEditModalProps {
   initialInput: string;
   initialExpected: string;
   actualOutput?: string;
+  hasResult?: boolean;
   onSave: (input: string, expected: string) => void;
   isRunning: boolean;
 }
@@ -21,6 +23,7 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
   initialInput,
   initialExpected,
   actualOutput = '',
+  hasResult = false,
   onSave,
   isRunning,
 }) => {
@@ -65,45 +68,7 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, onSave]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const modal = modalRef.current;
-    if (modal) {
-      const focusables = modal.querySelectorAll<HTMLElement>(focusableSelector);
-      if (focusables.length > 0) {
-        focusables[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const modal = modalRef.current;
-      if (!modal) return;
-
-      const focusables = modal.querySelectorAll<HTMLElement>(focusableSelector);
-      if (focusables.length === 0) return;
-
-      const firstElement = focusables[0];
-      const lastElement = focusables[focusables.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  useFocusTrap(isOpen, modalRef);
 
   if (!isOpen) return null;
 
@@ -115,7 +80,7 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
         if (e.target === e.currentTarget) handleSaveAndClose();
       }}
     >
-      <div className="bg-[var(--zcp-bg-editor)] border border-[var(--zcp-border)] rounded-[var(--zcp-radius-sm)] shadow-[0_2px_8px_rgba(0,0,0,0.3)] w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-[var(--zcp-duration)] text-[var(--zcp-text-primary)]">
+      <div className="bg-[var(--zcp-bg-editor)] border border-[var(--zcp-border)] rounded-[var(--zcp-radius-sm)] shadow-[0_12px_40px_rgba(0,0,0,0.5)] w-[95vw] max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-[var(--zcp-duration)] text-[var(--zcp-text-primary)]">
         
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--zcp-border)] bg-[var(--zcp-bg-sidebar)] shrink-0">
@@ -173,9 +138,12 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
           >
             {/* Input Editor Block */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0">
-              <label className="block text-[10px] text-[var(--zcp-text-secondary)] mb-1.5 uppercase tracking-wider font-bold font-sans">
-                Input
-              </label>
+              <div className="flex items-center justify-between mb-1.5 px-1 shrink-0 select-none">
+                <span className="text-[10px] text-[var(--zcp-text-secondary)] uppercase tracking-wider font-bold font-sans flex items-center gap-1.5">
+                  <span className="codicon codicon-terminal text-[12px] text-blue-400" />
+                  Input
+                </span>
+              </div>
               <CodeMirrorEditor
                 value={input}
                 onChange={setInput}
@@ -187,9 +155,12 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
 
             {/* Expected Output Editor Block */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0">
-              <label className="block text-[10px] text-[var(--zcp-text-secondary)] mb-1.5 uppercase tracking-wider font-bold font-sans">
-                Expected Output
-              </label>
+              <div className="flex items-center justify-between mb-1.5 px-1 shrink-0 select-none">
+                <span className="text-[10px] text-[var(--zcp-text-secondary)] uppercase tracking-wider font-bold font-sans flex items-center gap-1.5">
+                  <span className="codicon codicon-pass-filled text-[12px] text-green-400" />
+                  Expected Output
+                </span>
+              </div>
               <CodeMirrorEditor
                 value={expected}
                 onChange={setExpected}
@@ -200,17 +171,22 @@ export const TestcaseEditModal: React.FC<TestcaseEditModalProps> = ({
             </div>
 
             {/* Actual Output Editor Block */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-0">
-              <label className="block text-[10px] text-[var(--zcp-text-secondary)] mb-1.5 uppercase tracking-wider font-bold font-sans">
-                Actual Output
-              </label>
-              <CodeMirrorEditor
-                value={actualOutput}
-                readOnly={true}
-                className="flex-1 border border-[var(--zcp-border)] bg-[var(--zcp-bg-sidebar)] rounded-[var(--zcp-radius-sm)] overflow-hidden"
-                placeholder="No run results yet..."
-              />
-            </div>
+            {hasResult && (
+              <div className="flex-1 flex flex-col min-w-0 min-h-0 animate-in fade-in slide-in-from-right duration-200">
+                <div className="flex items-center justify-between mb-1.5 px-1 shrink-0 select-none">
+                  <span className="text-[10px] text-[var(--zcp-text-secondary)] uppercase tracking-wider font-bold font-sans flex items-center gap-1.5">
+                    <span className="codicon codicon-info text-[12px] text-amber-400" />
+                    Actual Output
+                  </span>
+                </div>
+                <CodeMirrorEditor
+                  value={actualOutput}
+                  readOnly={true}
+                  className="flex-1 border border-[var(--zcp-border)] bg-[var(--zcp-bg-sidebar)] rounded-[var(--zcp-radius-sm)] overflow-hidden"
+                  placeholder="No run results yet..."
+                />
+              </div>
+            )}
           </div>
         </div>
 

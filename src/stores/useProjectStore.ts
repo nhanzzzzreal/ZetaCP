@@ -1,7 +1,6 @@
-// src/stores/useProjectStore.ts
-
 import { create } from 'zustand';
 import { writeTextFile } from '../lib/tauri-bridge';
+import { notify } from './useNotificationStore';
 
 export interface FileNode {
   name: string;
@@ -93,6 +92,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           get().setFileDirty(activeFile, false);
         } catch (err) {
           console.error(`[AutoSave Store] Failed to save file ${activeFile}:`, err);
+          notify.fromTauriError(`Lỗi tự động lưu: ${activeFile.split(/[\\/]/).pop()}`, err);
         }
       }, 1000);
     }
@@ -134,6 +134,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           set({ dirtyFiles: { ...dirtyFiles, [activeFile]: false } });
         } catch (err) {
           console.error(`[useProjectStore] Error saving file:`, err);
+          notify.fromTauriError('Lỗi lưu file', err);
         }
       }
     }

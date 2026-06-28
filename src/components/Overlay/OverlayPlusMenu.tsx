@@ -78,7 +78,7 @@ export const OverlayPlusMenu: React.FC = () => {
       {/* Dropdown Menu (Opens upwards) */}
       {isOpen && (
         <div 
-          className="absolute bottom-full right-0 mb-1.5 w-64 bg-[#1e1e1e] border border-[var(--zcp-border)] rounded shadow-2xl py-1.5 z-[9999] animate-in fade-in slide-in-from-bottom-2 duration-150 font-mono"
+          className="absolute bottom-full right-0 mb-1.5 w-64 bg-[#2a2a2a] border border-[var(--zcp-border)] rounded shadow-2xl py-1.5 z-[9999] animate-in fade-in slide-in-from-bottom-2 duration-150 font-mono"
           style={{ transformOrigin: 'bottom right' }}
         >
           <div className="px-3 py-1.5 border-b border-neutral-800 mb-1">
@@ -92,9 +92,9 @@ export const OverlayPlusMenu: React.FC = () => {
               <button
                 key={item.type}
                 onClick={() => handleSelect(item.type)}
-                className="w-full px-3 py-2 flex items-start gap-3 hover:bg-[#222222] transition-colors text-left group"
+                className="w-full px-3 py-2 flex items-start gap-3 hover:bg-[#333333] transition-colors text-left group"
               >
-                <div className="mt-0.5 p-1 bg-[#161616] rounded group-hover:bg-[#121212] transition-colors">
+                <div className="mt-0.5 p-1 bg-[#202020] rounded group-hover:bg-[#1a1a1a] transition-colors">
                   {item.icon}
                 </div>
                 <div className="flex flex-col min-w-0">

@@ -34,7 +34,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ id, initialContent }) =>
           height: '100%',
           fontSize: '12px',
           fontFamily: 'Consolas, "Cascadia Code", "JetBrains Mono", monospace',
-          backgroundColor: '#1e1e1e',
+          backgroundColor: '#2a2a2a',
         },
         '.cm-scroller': { overflow: 'auto' },
         '.cm-content': { padding: '8px 0', caretColor: '#528bff' },
@@ -77,7 +77,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ id, initialContent }) =>
   }, [id]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#1e1e1e] overflow-hidden select-text">
+    <div className="flex-1 flex flex-col h-full bg-[#2a2a2a] overflow-hidden select-text">
       {/* CodeMirror container */}
       <div 
         ref={editorRef} 
@@ -85,7 +85,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ id, initialContent }) =>
       />
       
       {/* Ghi chú footer */}
-      <div className="h-5 bg-[#252526] border-t border-[#2d2d2d] px-3 flex items-center justify-between text-neutral-500 text-[9px] font-sans font-semibold shrink-0 select-none">
+      <div className="h-5 bg-[#202020] border-t border-[#2d2d2d] px-3 flex items-center justify-between text-neutral-500 text-[9px] font-sans font-semibold shrink-0 select-none">
         <span>CodeMirror 6 Editor</span>
         <span>Autosave</span>
       </div>

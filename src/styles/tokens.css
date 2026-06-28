@@ -2,35 +2,36 @@
 
 :root {
   /* VS Code Dark+ Colors mapped to ZetaCP */
-  --zcp-bg-editor: #1e1e1e;
+  --zcp-bg-editor: #1E1E1E;
   --zcp-bg-sidebar: #252526;
   --zcp-bg-activitybar: #333333;
-  --zcp-bg-statusbar: #007acc;
-  --zcp-bg-statusbar-debug: #cc6633;
-  --zcp-bg-tab-inactive: #2d2d2d;
-  --zcp-bg-tab-active: #1e1e1e;
-  --zcp-bg-terminal: #1e1e1e;
+  --zcp-bg-titlebar-active: #3C3C3C;
+  --zcp-bg-statusbar: #007ACC;
+  --zcp-bg-statusbar-debug: #CC6633;
+  --zcp-bg-tab-inactive: #2D2D2D;
+  --zcp-bg-tab-active: #1E1E1E;
+  --zcp-bg-terminal: #1E1E1E;
   
-  --zcp-focus-border: #007fd4;
-  --zcp-border: #2a2a2a;
-  --zcp-border-card: #3c3c3c;
-  --zcp-bg-card: #2a2a2a;
-  --zcp-hover-bg: #2a2d2e;
-  --zcp-accent: #007acc;
+  --zcp-focus-border: #007FD4;
+  --zcp-border: #303031;
+  --zcp-border-card: #303031;
+  --zcp-bg-card: #252526;
+  --zcp-hover-bg: #2A2D2E;
+  --zcp-accent: #007ACC;
 
   /* Text Colors */
-  --zcp-text-primary: #cccccc;
-  --zcp-text-secondary: #858585;
-  --zcp-text-active: #ffffff;
-  --zcp-text-muted: #6b7280;
+  --zcp-text-primary: #CCCCCC;
+  --zcp-text-secondary: #CCCCCCB3;
+  --zcp-text-active: #FFFFFF;
+  --zcp-text-muted: #CCCCCC80;
 
   /* Verdict colors */
   --zcp-verdict-ac: #22C55E;   /* Accepted - Xanh lá cây */
   --zcp-verdict-wa: #EF4444;   /* Wrong Answer - Đỏ */
-  --zcp-verdict-re: #F59E0B;   /* Runtime Error - Vàng cam */
+  --zcp-verdict-re: #EAB308;   /* Runtime Error - Vàng */
   --zcp-verdict-tle: #6B7280;  /* Time Limit Exceeded - Xám đậm */
-  --zcp-verdict-mle: #EAB308;  /* Memory Limit Exceeded - Vàng chanh */
-  --zcp-verdict-ce: #6B7280;   /* Compilation Error - Xám đậm */
+  --zcp-verdict-mle: #EAB308;  /* Memory Limit Exceeded - Vàng */
+  --zcp-verdict-ce: #EF4444;   /* Compilation Error - Đỏ */
 
   /* Spacing System */
   --zcp-space-1: 4px;
@@ -48,8 +49,8 @@
   --zcp-easing: cubic-bezier(0, 0, 0.2, 1);
 
   /* Fonts */
-  --zcp-font-mono: "Cascadia Code", Consolas, "Courier New", monospace;
-  --zcp-font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --zcp-font-mono: Consolas, "Courier New", monospace;
+  --zcp-font-ui: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, "Ubuntu", "Droid Sans", sans-serif;
 
   /* Layout dimensions */
   --zcp-activitybar-width: 48px;

@@ -62,4 +62,23 @@ export interface FileSettings {
   checkerType: string;
   customCheckerPath: string;
   customCheckerBinary: string;
+  stressBrutePath?: string;
+  stressSolPath?: string;
+  stressGenPath?: string;
+  stressGenMode?: 'blockly' | 'file';
+  stressGenTimeLimitMs?: number;
+  stressGenMemoryLimitKb?: number;
+  stressBruteTimeLimitMs?: number;
+  stressBruteMemoryLimitKb?: number;
+  stressTestCount?: number;
+  stressStopCondition?: string;
+  stressAutoExport?: boolean;
+  blocklyWorkspace?: string;
+}
+
+export interface FileContext {
+  subtasks: Subtask[];
+  metas: TestcaseMeta[];
+  results: TestcaseResult[];
+  settings: FileSettings;
 }

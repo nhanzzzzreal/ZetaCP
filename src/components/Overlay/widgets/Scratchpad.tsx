@@ -43,11 +43,11 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({ id, initialContent }) =>
   const lineNumbers = Array.from({ length: lineCount }, (_, idx) => idx + 1);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#1e1e1e] text-[#d4d4d4] font-mono text-xs overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[#2a2a2a] text-[#d4d4d4] font-mono text-xs overflow-hidden">
       {/* Editor Body */}
       <div className="flex-1 flex min-h-0 relative select-text">
         {/* Line Numbers gutter */}
-        <div className="w-9 bg-[#1e1e1e] border-r border-[#2d2d2d] py-2 text-right pr-2 select-none text-neutral-600 shrink-0 overflow-hidden">
+        <div className="w-9 bg-[#2a2a2a] border-r border-[#2d2d2d] py-2 text-right pr-2 select-none text-neutral-600 shrink-0 overflow-hidden">
           {lineNumbers.map((num) => (
             <div key={num} className="h-[18px] leading-[18px]">
               {num}
@@ -63,7 +63,7 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({ id, initialContent }) =>
           onSelect={handleSelectionChange}
           onKeyUp={handleSelectionChange}
           onMouseUp={handleSelectionChange}
-          className="flex-1 bg-[#1e1e1e] text-[#d4d4d4] p-2 border-0 outline-none resize-none overflow-y-auto leading-[18px] whitespace-pre placeholder-neutral-600 focus:ring-0 select-text selection:bg-[#264f78]"
+          className="flex-1 bg-[#2a2a2a] text-[#d4d4d4] p-2 border-0 outline-none resize-none overflow-y-auto leading-[18px] whitespace-pre placeholder-neutral-600 focus:ring-0 select-text selection:bg-[#264f78]"
           placeholder="// Start drafting here..."
           spellCheck={false}
           style={{

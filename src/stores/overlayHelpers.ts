@@ -15,15 +15,18 @@ export const getDefaultTitle = (type: string, title?: string): string => {
     pdf: 'PDF Viewer',
     word: 'Word Document',
     notes: 'Notes',
-    calculator: 'CP Calculator'
+    calculator: 'CP Calculator',
+    graph: 'Graph Visualizer',
+    'graph-viewer': 'Graph Visualizer'
   };
   return defaultTitles[type] || 'Overlay Window';
 };
 
 export const getDefaultContent = (type: string, content?: string): string => {
-  if (content) return content;
+  if (content !== undefined) return content;
   if (type === 'scratchpad') return '[]';
   if (type === 'notes') return 'New note...';
+  if (type === 'graph' || type === 'graph-viewer') return '';
   return '';
 };
 
@@ -36,7 +39,9 @@ export const getDefaultDimensions = (type: string): { w: number; h: number } => 
     pdf: { w: 600, h: 500 },
     word: { w: 400, h: 260 },
     diff: { w: 750, h: 500 },
-    calculator: { w: 380, h: 510 }
+    calculator: { w: 380, h: 510 },
+    graph: { w: 820, h: 520 },
+    'graph-viewer': { w: 820, h: 520 }
   };
   return defaultDimensions[type] || { w: 400, h: 300 };
 };
@@ -70,11 +75,19 @@ export const createOverlayState = (params: {
   };
 };
 
+export const normalizeFilePath = (fp: string): string => {
+  if (!fp || fp === 'GLOBAL') return fp;
+  return fp.replace(/\\/g, '/');
+};
+
 export const saveOverlayState = async (filePath: string, overlays: OverlayState[]): Promise<void> => {
   try {
     if (!filePath || filePath === 'GLOBAL') return;
-    const fileOverlays = overlays.filter(o => o.filePath === filePath && o.filePath !== 'GLOBAL');
-    await saveOverlaysBackend(filePath, fileOverlays);
+    const normPath = normalizeFilePath(filePath);
+    const fileOverlays = overlays
+      .filter(o => o.filePath && o.filePath !== 'GLOBAL' && normalizeFilePath(o.filePath) === normPath)
+      .map(o => ({ ...o, filePath: normPath }));
+    await saveOverlaysBackend(normPath, fileOverlays);
     const { emit } = await import('@tauri-apps/api/event');
     await emit('overlays-updated');
   } catch (err) {
@@ -85,6 +98,7 @@ export const saveOverlayState = async (filePath: string, overlays: OverlayState[
 export const mapOverlays = (loaded: OverlayState[]): OverlayState[] => {
   return loaded.map((o, idx) => ({
     ...o,
+    filePath: normalizeFilePath(o.filePath),
     zIndex: o.zIndex || (idx + 1),
     isVisible: o.isVisible !== undefined ? o.isVisible : true
   }));
@@ -94,12 +108,13 @@ export const loadAndSetOverlays = async (
   filePath: string,
   set: (state: any) => void
 ): Promise<void> => {
-  const loaded = await loadOverlays(filePath);
+  const normPath = normalizeFilePath(filePath);
+  const loaded = await loadOverlays(normPath);
   const mapped = mapOverlays(loaded);
   set((state: any) => ({
-    overlays: [...state.overlays, ...mapped],
-    loadedFilePaths: [...state.loadedFilePaths, filePath],
-    currentFilePath: filePath
+    overlays: [...state.overlays.filter((o: any) => normalizeFilePath(o.filePath) !== normPath), ...mapped],
+    loadedFilePaths: state.loadedFilePaths.includes(normPath) ? state.loadedFilePaths : [...state.loadedFilePaths, normPath],
+    currentFilePath: normPath
   }));
 };
 
@@ -109,7 +124,8 @@ export const deleteOverlayState = async (
   overlays: OverlayState[]
 ): Promise<void> => {
   try {
-    await deleteOverlayBackend(filePath, id);
+    const normPath = normalizeFilePath(filePath);
+    await deleteOverlayBackend(normPath, id);
     const { emit } = await import('@tauri-apps/api/event');
     await emit('overlays-updated');
   } catch (err) {

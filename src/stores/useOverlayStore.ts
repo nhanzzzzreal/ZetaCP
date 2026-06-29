@@ -11,7 +11,8 @@ import {
   createOverlayState,
   saveOverlayState,
   loadAndSetOverlays,
-  deleteOverlayState
+  deleteOverlayState,
+  normalizeFilePath
 } from './overlayHelpers';
 
 export type { OverlayState };
@@ -81,7 +82,7 @@ const applyOverlayChange = (set: any, get: any, id: string, mapper: (o: OverlayS
 const saveTargetOverlay = (nextOverlays: OverlayState[], id: string) => {
   const target = nextOverlays.find(o => o.id === id);
   if (target && target.filePath) {
-    saveOverlayState(target.filePath, nextOverlays).catch(() => {});
+    saveOverlayState(normalizeFilePath(target.filePath), nextOverlays).catch(() => {});
   }
 };
 
@@ -93,21 +94,22 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
   logs: [],
   
   loadOverlaysForFile: async (filePath: string) => {
+    const normPath = normalizeFilePath(filePath);
     if (isSwitching) {
-      pendingFilePath = filePath;
+      pendingFilePath = normPath;
       return;
     }
     isSwitching = true;
     pendingFilePath = null;
     try {
-      const isLoaded = get().loadedFilePaths.includes(filePath);
+      const isLoaded = get().loadedFilePaths.includes(normPath);
       if (!isLoaded) {
-        await loadAndSetOverlays(filePath, set);
+        await loadAndSetOverlays(normPath, set);
       } else {
-        set({ currentFilePath: filePath });
+        set({ currentFilePath: normPath });
       }
     } catch (err) {
-      console.error(`[useOverlayStore] Failed to load overlays for ${filePath}:`, err);
+      console.error(`[useOverlayStore] Failed to load overlays for ${normPath}:`, err);
     } finally {
       isSwitching = false;
       handlePendingLoad(get);
@@ -116,21 +118,23 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
 
   syncOverlays: async (filePath: string) => {
     try {
-      const loaded = await loadOverlays(filePath);
+      const normPath = normalizeFilePath(filePath);
+      const loaded = await loadOverlays(normPath);
       const mapped = loaded.map((o, idx) => ({
         ...o,
+        filePath: normalizeFilePath(o.filePath),
         zIndex: o.zIndex || (idx + 1),
         isVisible: o.isVisible !== undefined ? o.isVisible : true
       }));
       set(state => ({
         overlays: [
-          ...state.overlays.filter(o => o.filePath !== filePath),
+          ...state.overlays.filter(o => normalizeFilePath(o.filePath) !== normPath),
           ...mapped
         ],
-        loadedFilePaths: state.loadedFilePaths.includes(filePath)
+        loadedFilePaths: state.loadedFilePaths.includes(normPath)
           ? state.loadedFilePaths
-          : [...state.loadedFilePaths, filePath],
-        currentFilePath: filePath
+          : [...state.loadedFilePaths, normPath],
+        currentFilePath: normPath
       }));
     } catch (err) {
       console.error(`[useOverlayStore] Failed to sync overlays for ${filePath}:`, err);
@@ -139,17 +143,23 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
   
   saveOverlays: async () => {
     const { overlays, currentFilePath } = get();
-    if (currentFilePath) {
-      await saveOverlayState(currentFilePath, overlays);
+    const pathsToSave = new Set<string>();
+    if (currentFilePath) pathsToSave.add(normalizeFilePath(currentFilePath));
+    overlays.forEach((o) => {
+      if (o.filePath && o.filePath !== 'GLOBAL') pathsToSave.add(normalizeFilePath(o.filePath));
+    });
+    for (const fp of pathsToSave) {
+      await saveOverlayState(fp, overlays);
     }
   },
   
   addOverlay: async (type: string, title?: string, content = '') => {
-    const filePath = get().currentFilePath || useProjectStore.getState().activeFile;
-    if (!filePath) {
+    const rawPath = get().currentFilePath || useProjectStore.getState().activeFile;
+    if (!rawPath) {
       console.warn('[useOverlayStore] Cannot add overlay: no active file path.');
       return;
     }
+    const filePath = normalizeFilePath(rawPath);
     const finalTitle = getDefaultTitle(type, title);
     const finalContent = getDefaultContent(type, content);
     const dim = getDefaultDimensions(type);

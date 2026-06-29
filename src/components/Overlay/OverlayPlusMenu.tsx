@@ -7,7 +7,8 @@ import {
   Image, 
   FileCode2,
   FileEdit,
-  PenTool
+  PenTool,
+  Network
 } from 'lucide-react';
 import { useOverlayStore, Overlay } from '../../stores/useOverlayStore';
 
@@ -35,6 +36,12 @@ export const OverlayPlusMenu: React.FC = () => {
   };
 
   const menuItems = [
+    {
+      type: 'graph' as const,
+      label: 'Graph Visualizer',
+      desc: 'Visualize edge list / matrix graph',
+      icon: <Network className="w-4 h-4 text-emerald-400/90" strokeWidth={1.5} />,
+    },
     {
       type: 'scratchpad' as const,
       label: 'Sketchpad',

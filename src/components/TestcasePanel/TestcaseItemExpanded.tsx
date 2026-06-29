@@ -36,6 +36,15 @@ export const TestcaseItemExpanded: React.FC<TestcaseItemExpandedProps> = ({
             <button 
               type="button"
               onClick={() => {
+                import('./graphHelper').then((m) => m.openTestcaseInGraph(meta.id));
+              }}
+              className="text-[10px] text-purple-400 hover:text-purple-300 font-medium cursor-pointer transition-colors"
+            >
+              Graph
+            </button>
+            <button 
+              type="button"
+              onClick={() => {
                 navigator.clipboard.writeText(localInput);
               }}
               className="text-[10px] text-[var(--zcp-text-muted)] hover:text-[var(--zcp-text-active)] cursor-pointer transition-colors"

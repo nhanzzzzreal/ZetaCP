@@ -41,6 +41,15 @@ export const TestcaseItemActions: React.FC<TestcaseItemActionsProps> = ({
         <span className="codicon codicon-screen-full text-[11px]" />
       </button>
       <button
+        onClick={() => {
+          import('./graphHelper').then((m) => m.openTestcaseInGraph(meta.id));
+        }}
+        className="w-6 h-6 bg-[#8b5cf6] hover:brightness-[1.15] text-white transition-all duration-[var(--zcp-duration)] focus-visible-outline rounded-[2px] cursor-pointer flex items-center justify-center"
+        title="Visualize Graph Input"
+      >
+        <span className="codicon codicon-type-hierarchy text-[11px]" />
+      </button>
+      <button
         onClick={() => useTestcaseStore.getState().simulateRun([meta.id])}
         disabled={isRunning || !meta.isActive}
         className="w-6 h-6 bg-[#5c8b2d] hover:brightness-[1.15] text-white disabled:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-[var(--zcp-duration)] focus-visible-outline rounded-[2px] cursor-pointer flex items-center justify-center"

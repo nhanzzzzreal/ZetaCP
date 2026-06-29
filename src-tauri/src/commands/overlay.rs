@@ -64,12 +64,17 @@ impl From<DbOverlayRow> for OverlayState {
     }
 }
 
+fn normalize_path(p: &str) -> String {
+    p.replace('\\', "/")
+}
+
 #[tauri::command]
 pub async fn load_overlays(
     file_path: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<OverlayState>, ZetaError> {
-    let proj_db = match state.get_db_pool(&file_path, false).await? {
+    let norm_path = normalize_path(&file_path);
+    let proj_db = match state.get_db_pool(&norm_path, false).await? {
         Some(pool) => pool,
         None => return Ok(Vec::new()),
     };
@@ -77,7 +82,7 @@ pub async fn load_overlays(
     let rows = sqlx::query_as::<_, DbOverlayRow>(
         "SELECT id, file_path, type, title, content, x, y, width, height, is_minimized, is_pinned, opacity, is_visible, z_index FROM OverlayState WHERE file_path = ?"
     )
-    .bind(&file_path)
+    .bind(&norm_path)
     .fetch_all(&proj_db)
     .await?;
 
@@ -90,7 +95,8 @@ pub async fn save_overlays(
     overlays: Vec<OverlayState>,
     state: State<'_, AppState>,
 ) -> Result<(), ZetaError> {
-    let proj_db = state.get_db_pool(&file_path, true).await?.ok_or_else(|| {
+    let norm_path = normalize_path(&file_path);
+    let proj_db = state.get_db_pool(&norm_path, true).await?.ok_or_else(|| {
         ZetaError::Database("Không thể khởi tạo database pool".to_string())
     })?;
 
@@ -98,18 +104,19 @@ pub async fn save_overlays(
 
     // Delete existing overlays for this file_path
     sqlx::query("DELETE FROM OverlayState WHERE file_path = ?")
-        .bind(&file_path)
+        .bind(&norm_path)
         .execute(&mut *tx)
         .await?;
 
     // Insert new overlays
     for overlay in overlays {
+        let overlay_norm_path = normalize_path(&overlay.file_path);
         sqlx::query(
             "INSERT INTO OverlayState (id, file_path, type, title, content, x, y, width, height, is_minimized, is_pinned, opacity, is_visible, z_index) \
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(&overlay.id)
-        .bind(&file_path)
+        .bind(&overlay_norm_path)
         .bind(&overlay.r#type)
         .bind(&overlay.title)
         .bind(&overlay.content)
@@ -137,7 +144,8 @@ pub async fn delete_overlay(
     id: String,
     state: State<'_, AppState>,
 ) -> Result<(), ZetaError> {
-    let proj_db = state.get_db_pool(&file_path, true).await?.ok_or_else(|| {
+    let norm_path = normalize_path(&file_path);
+    let proj_db = state.get_db_pool(&norm_path, true).await?.ok_or_else(|| {
         ZetaError::Database("Không thể khởi tạo database pool".to_string())
     })?;
 

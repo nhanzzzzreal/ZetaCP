@@ -7,6 +7,7 @@ import { NoteEditor } from './widgets/NoteEditor';
 import { LocalFileViewer } from './widgets/LocalFileViewer';
 import { DiffViewerWidget } from './widgets/DiffViewerWidget';
 import { CalculatorWidget } from './widgets/CalculatorWidget';
+import { GraphVisualizerWidget } from './widgets/GraphVisualizerWidget';
 
 interface OverlayWidgetRendererProps {
   overlay: Overlay;
@@ -31,6 +32,10 @@ export const OverlayWidgetRenderer: React.FC<OverlayWidgetRendererProps> = ({ ov
     
     case 'calculator':
       return <CalculatorWidget overlay={overlay} />;
+    
+    case 'graph':
+    case 'graph-viewer':
+      return <GraphVisualizerWidget overlay={overlay} />;
     
     default:
       return (

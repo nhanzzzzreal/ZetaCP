@@ -27,6 +27,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 thiserror    = "2"
 sha2         = "0.10"
 notify       = "6"              # File watcher cho fs://file_changed
+num-bigint   = "0.4"
+num-traits   = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = ["Win32_System_JobObjects", "Win32_Security", "Win32_Foundation", "Win32_System_Threading"] }

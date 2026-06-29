@@ -26,6 +26,9 @@ export const OverlayWidgetRenderer: React.FC<OverlayWidgetRendererProps> = ({ ov
     case 'md':
     case 'word':
       return <LocalFileViewer id={overlay.id} type={overlay.type} filePath={overlay.content} />;
+
+    case 'fileviewer':
+      return <LocalFileViewer id={overlay.id} type="fileviewer" filePath={overlay.content} />;
     
     case 'diff':
       return <DiffViewerWidget id={overlay.id} content={overlay.content} />;

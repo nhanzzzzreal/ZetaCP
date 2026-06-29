@@ -3,7 +3,6 @@
 import React from 'react';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useOverlayStore } from '../../stores/useOverlayStore';
-import { OverlayPlusMenu } from '../Overlay/OverlayPlusMenu';
 import { NotificationBell } from '../Notifications/NotificationCenter';
 
 export const StatusBar: React.FC = () => {
@@ -100,10 +99,6 @@ export const StatusBar: React.FC = () => {
           )}
         </div>
 
-        {/* Plus add button (OverlayPlusMenu) */}
-        <div className="shrink-0 flex items-center">
-          <OverlayPlusMenu />
-        </div>
       </div>
 
       {/* Right side: cursor pos, spaces, encoding, language */}

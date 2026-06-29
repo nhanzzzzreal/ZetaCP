@@ -45,6 +45,8 @@ export const StatusBar: React.FC = () => {
         return 'codicon-image';
       case 'pdf':
         return 'codicon-file-pdf';
+      case 'calculator':
+        return 'codicon-calculator';
       default:
         return 'codicon-book';
     }

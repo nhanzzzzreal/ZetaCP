@@ -1,6 +1,5 @@
-// src/components/ActivityBar/ActivityBar.tsx
-
 import React from 'react';
+import { useOverlayStore } from '../../stores/useOverlayStore';
 
 interface ActivityBarProps {
   activeTab: string;
@@ -19,6 +18,10 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
   onOpenSettings,
   onOpenDocs,
 }) => {
+  const isCalcOpen = useOverlayStore((s) =>
+    s.overlays.some((o) => o.type === 'calculator' && o.isVisible && !o.isMinimized)
+  );
+
   const items = [
     { id: 'explorer', icon: 'files', label: 'Explorer (Ctrl+Shift+E)' },
     { id: 'search', icon: 'search', label: 'Search (Ctrl+Shift+F)' },
@@ -62,6 +65,20 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             </button>
           );
         })}
+
+        {/* CP Calculator Floating Window Button in Top Section */}
+        <button
+          onClick={() => useOverlayStore.getState().toggleCalculator()}
+          className={`relative w-full h-[var(--zcp-activitybar-width)] flex items-center justify-center cursor-pointer transition-all duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] hover:bg-[var(--zcp-hover-bg)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--zcp-focus-border)] ${
+            isCalcOpen ? 'text-[var(--zcp-text-active)]' : 'text-[var(--zcp-text-secondary)] hover:text-[var(--zcp-text-active)]'
+          }`}
+          title="CP Calculator (Floating Window)"
+        >
+          {isCalcOpen && (
+            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--zcp-text-active)]" />
+          )}
+          <span className="codicon codicon-symbol-numeric" style={{ fontSize: 24 }} />
+        </button>
       </div>
 
       {/* Bottom Icons (Docs + Settings) */}

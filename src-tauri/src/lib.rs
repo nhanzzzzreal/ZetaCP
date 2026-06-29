@@ -190,7 +190,8 @@ pub fn run() {
             crate::commands::stress_test::run_stress_test,
             crate::commands::stress_test::stop_stress_test,
             crate::commands::stress_test::resume_stress_test,
-            crate::commands::stress_test::install_testlib
+            crate::commands::stress_test::install_testlib,
+            crate::commands::calculator::eval_cp_expr
         ])
         .run(tauri::generate_context!())
     {

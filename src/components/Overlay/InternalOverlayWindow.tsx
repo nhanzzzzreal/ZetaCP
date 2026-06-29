@@ -62,7 +62,7 @@ export const InternalOverlayWindow: React.FC<InternalOverlayWindowProps> = ({
 
   const calculatedZIndex = overlay.isPinned ? overlay.zIndex + 10000 : overlay.zIndex;
   const currentFilePath = useOverlayStore(state => state.currentFilePath);
-  const isFromDifferentFile = overlay.filePath !== currentFilePath;
+  const isFromDifferentFile = overlay.filePath !== 'GLOBAL' && overlay.filePath !== currentFilePath;
   const isHidden = overlay.isMinimized || !overlay.isVisible || isFromDifferentFile;
 
   const windowStyle: React.CSSProperties = isMaximized

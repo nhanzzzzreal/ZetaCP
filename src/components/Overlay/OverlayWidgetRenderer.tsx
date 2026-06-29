@@ -6,6 +6,7 @@ import { ScratchpadCanvas } from './widgets/ScratchpadCanvas';
 import { NoteEditor } from './widgets/NoteEditor';
 import { LocalFileViewer } from './widgets/LocalFileViewer';
 import { DiffViewerWidget } from './widgets/DiffViewerWidget';
+import { CalculatorWidget } from './widgets/CalculatorWidget';
 
 interface OverlayWidgetRendererProps {
   overlay: Overlay;
@@ -27,6 +28,9 @@ export const OverlayWidgetRenderer: React.FC<OverlayWidgetRendererProps> = ({ ov
     
     case 'diff':
       return <DiffViewerWidget id={overlay.id} content={overlay.content} />;
+    
+    case 'calculator':
+      return <CalculatorWidget overlay={overlay} />;
     
     default:
       return (

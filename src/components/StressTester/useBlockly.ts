@@ -44,8 +44,11 @@ export const useBlockly = ({ containerRef, solPath, rootPath, genPath, genMode }
         .blocklyText, .blocklyTreeLabel, .blocklyHtmlInput {
           font-weight: normal !important;
         }
-        .blocklyToolboxDiv, .blocklyFlyout {
-          z-index: 20 !important;
+        .blocklyToolboxDiv {
+          z-index: 1 !important;
+        }
+        .blocklyFlyout {
+          z-index: 2 !important;
         }
         /* Ensure scrollbars are strictly hidden when flyout or canvas container is hidden / collapsed */
         .blocklyFlyout[style*="display: none"] ~ .blocklyFlyoutScrollbar,

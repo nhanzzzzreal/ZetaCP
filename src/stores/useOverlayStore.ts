@@ -47,6 +47,7 @@ interface OverlayStoreState {
   updateOverlay: (id: string, updates: Partial<OverlayState>) => void;
   bringToFront: (id: string) => void;
   toggleShowAll: () => Promise<void>;
+  toggleCalculator: () => void;
   
   addLog: (type: 'success' | 'warning' | 'error' | 'info', source: 'compiler' | 'judge' | 'system', message: string, details?: string) => void;
   clearLogs: () => void;
@@ -238,6 +239,40 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
 
     if (currentFilePath) {
       await saveOverlayState(currentFilePath, nextOverlays);
+    }
+  },
+
+  toggleCalculator: () => {
+    const overlays = get().overlays;
+    const existing = overlays.find(o => o.type === 'calculator');
+    if (!existing) {
+      const dim = getDefaultDimensions('calculator');
+      const maxZ = overlays.reduce((max, o) => Math.max(max, o.zIndex), 0);
+      const newOverlay = createOverlayState({
+        filePath: 'GLOBAL',
+        type: 'calculator',
+        title: 'CP Calculator',
+        content: '',
+        staggerIndex: overlays.length,
+        maxZ,
+        dim
+      });
+      set({ overlays: [...overlays, newOverlay] });
+    } else {
+      if (!existing.isVisible || existing.isMinimized) {
+        set({
+          overlays: overlays.map(o =>
+            o.id === existing.id ? { ...o, isVisible: true, isMinimized: false } : o
+          )
+        });
+        get().bringToFront(existing.id);
+      } else {
+        set({
+          overlays: overlays.map(o =>
+            o.id === existing.id ? { ...o, isVisible: false } : o
+          )
+        });
+      }
     }
   },
   

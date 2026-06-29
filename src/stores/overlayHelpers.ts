@@ -14,7 +14,8 @@ export const getDefaultTitle = (type: string, title?: string): string => {
     image: 'Image Viewer',
     pdf: 'PDF Viewer',
     word: 'Word Document',
-    notes: 'Notes'
+    notes: 'Notes',
+    calculator: 'CP Calculator'
   };
   return defaultTitles[type] || 'Overlay Window';
 };
@@ -34,7 +35,8 @@ export const getDefaultDimensions = (type: string): { w: number; h: number } => 
     image: { w: 480, h: 360 },
     pdf: { w: 600, h: 500 },
     word: { w: 400, h: 260 },
-    diff: { w: 750, h: 500 }
+    diff: { w: 750, h: 500 },
+    calculator: { w: 380, h: 510 }
   };
   return defaultDimensions[type] || { w: 400, h: 300 };
 };
@@ -70,7 +72,8 @@ export const createOverlayState = (params: {
 
 export const saveOverlayState = async (filePath: string, overlays: OverlayState[]): Promise<void> => {
   try {
-    const fileOverlays = overlays.filter(o => o.filePath === filePath);
+    if (!filePath || filePath === 'GLOBAL') return;
+    const fileOverlays = overlays.filter(o => o.filePath === filePath && o.filePath !== 'GLOBAL');
     await saveOverlaysBackend(filePath, fileOverlays);
     const { emit } = await import('@tauri-apps/api/event');
     await emit('overlays-updated');

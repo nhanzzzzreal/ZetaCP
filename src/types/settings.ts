@@ -1,4 +1,4 @@
-// src/types/settings.ts
+import { PanelLayoutSettings } from './panelLayout';
 
 export interface GlobalSettings {
   compiler: {
@@ -24,4 +24,6 @@ export interface GlobalSettings {
     hide: string[];        // [".exe", ".db", ".o"]
   };
   shortcuts: Record<string, string>;
+  panelLayout: PanelLayoutSettings;
 }
+

@@ -1,12 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
-import { FileTree } from './FileExplorer/FileTree';
 import { MonacoEditor } from './Editor/MonacoEditor';
 import { TabBar } from './Editor/TabBar';
 import { TitleBar } from './TitleBar/TitleBar';
 import { useProjectStore } from '../stores/useProjectStore';
 import { TerminalPanel } from './Terminal/TerminalPanel';
-import { TestcasePanel } from './TestcasePanel/TestcasePanel';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { SettingsPanel } from './Settings/SettingsPanel';
 import { useMainAppPanels } from '../hooks/useMainAppPanels';
@@ -14,30 +12,25 @@ import { StatusBar } from './StatusBar/StatusBar';
 import { InternalOverlayContainer } from './Overlay/InternalOverlayContainer';
 import { openDocsWindow } from '../lib/tauri-bridge';
 import { ActivityBar } from './ActivityBar/ActivityBar';
-import { SnippetManager } from './Settings/SnippetManager';
 import { NotificationCenter } from './Notifications/NotificationCenter';
 import { notify } from '../stores/useNotificationStore';
 import { useAppSync } from '../hooks/useAppSync';
 
-import { StressTesterSidebar } from './StressTester/StressTesterSidebar';
 import { StressBlocklyCanvas } from './StressTester/StressBlocklyCanvas';
 import { StressTestManager } from './StressTester/StressTestManager';
 import { useStressTestStore } from '../stores/useStressTestStore';
+
+import { RightPanelTabs } from './RightPanel/RightPanelTabs';
+import { getPanelContent } from './RightPanel/getPanelContent';
+import { PanelViewId } from '../types/panelLayout';
+import { useLayoutStore } from '../stores/useLayoutStore';
 
 interface LeftSidebarContentProps {
   activeTab: string;
 }
 
 export const LeftSidebarContent: React.FC<LeftSidebarContentProps> = ({ activeTab }) => {
-  if (activeTab === 'explorer') return <FileTree />;
-  if (activeTab === 'snippets') return <SnippetManager />;
-  if (activeTab === 'stress') return <StressTesterSidebar />;
-  const label = activeTab === 'search' ? 'Search in project' : 'CP Debugger';
-  return (
-    <div className="w-full h-full bg-[var(--zcp-bg-sidebar)] p-4 text-xs text-[var(--zcp-text-secondary)] font-sans">
-      {label} (Coming soon)
-    </div>
-  );
+  return <>{getPanelContent(activeTab as PanelViewId)}</>;
 };
 
 interface ConsolePanelWrapperProps {
@@ -74,8 +67,11 @@ export const ConsolePanelWrapper: React.FC<ConsolePanelWrapperProps> = ({
 
 export function MainApp() {
   const activeFile = useProjectStore((s) => s.activeFile);
+  const settings = useSettingsStore((s) => s.settings);
   const isSettingsOpen = useSettingsStore((s) => s.isSettingsOpen);
   const openSettings = useSettingsStore((state) => state.openSettings);
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const setPanelLayout = useLayoutStore((s) => s.setPanelLayout);
   
   const {
     leftPanelOpen, setLeftPanelOpen,
@@ -89,6 +85,16 @@ export function MainApp() {
   const isBlocklyActive = activeTab === 'stress' && genMode === 'blockly';
 
   useAppSync();
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (settings && settings.panelLayout) {
+      setPanelLayout(settings.panelLayout.rightTabs, settings.panelLayout.activeRightTab);
+    }
+  }, [settings, setPanelLayout]);
 
   const handleOpenDocs = (docsType: 'cp-algorithms') => {
     openDocsWindow(docsType).catch((err: unknown) => {
@@ -117,6 +123,8 @@ export function MainApp() {
             setActiveTab={setActiveTab}
             leftPanelOpen={leftPanelOpen}
             onToggleLeftPanel={() => setLeftPanelOpen(!leftPanelOpen)}
+            rightPanelOpen={rightPanelOpen}
+            setRightPanelOpen={setRightPanelOpen}
             onOpenSettings={openSettings}
             onOpenDocs={handleOpenDocs}
           />
@@ -178,7 +186,7 @@ export function MainApp() {
           <Separator className="w-[1px] bg-[var(--zcp-border)] hover:bg-[var(--zcp-focus-border)] active:bg-[var(--zcp-focus-border)] focus-visible:bg-[var(--zcp-focus-border)] outline-none transition-colors duration-[var(--zcp-duration)] ease-[var(--zcp-easing)] cursor-col-resize z-10" />
 
           <Panel panelRef={rightPanelRef} defaultSize="20%" minSize="15%" maxSize="40%" collapsible collapsedSize="0%" className="overflow-hidden h-full w-full" onResize={(size) => setRightPanelOpen(size.asPercentage > 0)}>
-            <TestcasePanel />
+            <RightPanelTabs />
           </Panel>
         </Group>
       </div>

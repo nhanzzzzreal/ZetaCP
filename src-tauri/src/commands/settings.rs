@@ -42,6 +42,13 @@ pub struct FileFilterSettings {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PanelLayoutSettings {
+    pub right_tabs: Vec<String>,
+    pub active_right_tab: String,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct GlobalSettings {
     pub compiler: CompilerSettings,
     pub theme: String, // "dark" | "light" | "system"
@@ -51,6 +58,8 @@ pub struct GlobalSettings {
     #[serde(rename = "fileFilter")]
     pub file_filter: FileFilterSettings,
     pub shortcuts: std::collections::HashMap<String, String>,
+    #[serde(rename = "panelLayout")]
+    pub panel_layout: PanelLayoutSettings,
 }
 
 async fn get_setting(pool: &SqlitePool, key: &str, default: &str) -> String {
@@ -94,6 +103,8 @@ pub async fn load_settings(state: State<'_, AppState>) -> Result<GlobalSettings,
     let filter_show_str = get_setting(pool, "file_filter.show", ".cpp,.py").await;
     let filter_hide_str = get_setting(pool, "file_filter.hide", ".exe,.db,.o").await;
     let shortcuts_str = get_setting(pool, "shortcuts.bindings", "").await;
+    let right_tabs_str = get_setting(pool, "panel_layout.right_tabs", "testcase").await;
+    let active_right_tab = get_setting(pool, "panel_layout.active_right_tab", "testcase").await;
 
     let font_size = font_size_str.parse().unwrap_or(14);
     let judge_threads = judge_threads_str.parse().unwrap_or(4);
@@ -102,6 +113,7 @@ pub async fn load_settings(state: State<'_, AppState>) -> Result<GlobalSettings,
 
     let show = filter_show_str.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
     let hide = filter_hide_str.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    let right_tabs = right_tabs_str.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
 
     let shortcuts: std::collections::HashMap<String, String> = if shortcuts_str.is_empty() {
         let mut default_map = std::collections::HashMap::new();
@@ -145,6 +157,10 @@ pub async fn load_settings(state: State<'_, AppState>) -> Result<GlobalSettings,
             hide,
         },
         shortcuts,
+        panel_layout: PanelLayoutSettings {
+            right_tabs,
+            active_right_tab,
+        },
     })
 }
 
@@ -170,6 +186,10 @@ pub async fn save_settings(
     let hide_str = settings.file_filter.hide.join(",");
     save_setting(pool, "file_filter.show", &show_str).await?;
     save_setting(pool, "file_filter.hide", &hide_str).await?;
+
+    let right_tabs_str = settings.panel_layout.right_tabs.join(",");
+    save_setting(pool, "panel_layout.right_tabs", &right_tabs_str).await?;
+    save_setting(pool, "panel_layout.active_right_tab", &settings.panel_layout.active_right_tab).await?;
 
     let shortcuts_json = serde_json::to_string(&settings.shortcuts)
         .map_err(|e| ZetaError::Fatal(e.to_string()))?;

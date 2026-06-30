@@ -9,7 +9,7 @@ import {
   stopStressTest,
   resumeStressTest,
   loadFileSettings,
-  saveFileSettings,
+  saveStressSettings,
   installTestlib,
   writeTextFile,
 } from '../lib/tauri-bridge';
@@ -229,9 +229,10 @@ export const useStressTestStore = create<StressTestState>((set, get) => ({
       stressStopCondition: s.stopCondition,
       stressAutoExport: s.autoExport,
       runMode: s.runMode,
+      blocklyWorkspace: s.solSettings?.blocklyWorkspace || '',
     };
     try {
-      await saveFileSettings(updated);
+      await saveStressSettings(updated as any);
       set({ solSettings: updated });
     } catch (e) {
       console.error(e);

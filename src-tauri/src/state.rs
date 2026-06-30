@@ -15,6 +15,7 @@ pub struct AppState {
     pub stress_pause_notify: Mutex<Option<std::sync::Arc<tokio::sync::Notify>>>,
     pub stress_paused: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub stress_cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub companion_handle: Mutex<Option<tokio::task::JoinHandle<()>>>,
 }
 
 impl AppState {

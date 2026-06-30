@@ -126,6 +126,7 @@ pub fn run() {
                 stress_pause_notify: Mutex::new(None),
                 stress_paused: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
                 stress_cancel: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                companion_handle: Mutex::new(None),
             });
 
             Ok(())
@@ -170,6 +171,7 @@ pub fn run() {
             crate::commands::testcases::stop_testcases,
             crate::commands::testcases::load_file_settings,
             crate::commands::testcases::save_file_settings,
+            crate::commands::testcases::save_stress_settings,
             crate::commands::testcases::import_testcases_from_folder,
             crate::commands::testcases::export_testcases,
             crate::commands::testcases::compute_diff,
@@ -191,7 +193,11 @@ pub fn run() {
             crate::commands::stress_test::stop_stress_test,
             crate::commands::stress_test::resume_stress_test,
             crate::commands::stress_test::install_testlib,
-            crate::commands::calculator::eval_cp_expr
+            crate::commands::calculator::eval_cp_expr,
+            crate::commands::companion::start_companion_listener,
+            crate::commands::companion::stop_companion_listener,
+            crate::commands::companion::is_companion_listener_running,
+            crate::commands::companion::overwrite_testcases
         ])
         .run(tauri::generate_context!())
     {

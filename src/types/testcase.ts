@@ -82,3 +82,35 @@ export interface FileContext {
   results: TestcaseResult[];
   settings: FileSettings;
 }
+
+export interface ExecutionConfig {
+  filePath: string;
+  compilerFlags: string;
+  interpreterFlags: string;
+  ioMode: 'stdio' | 'file';
+  inputFile: string;
+  outputFile: string;
+  timeLimitMs: number;
+  memoryLimitKb: number;
+  runMode: 'parallel' | 'sequential';
+  checkerType: string;
+  customCheckerPath: string;
+  customCheckerBinary: string;
+}
+
+export interface StressConfig {
+  filePath: string;
+  stressBrutePath: string;
+  stressSolPath: string;
+  stressGenPath: string;
+  stressGenMode: 'blockly' | 'file';
+  stressGenTimeLimitMs: number;
+  stressGenMemoryLimitKb: number;
+  stressBruteTimeLimitMs: number;
+  stressBruteMemoryLimitKb: number;
+  stressTestCount: number;
+  stressStopCondition: string;
+  stressAutoExport: boolean;
+  blocklyWorkspace: string;
+}
+

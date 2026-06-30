@@ -19,6 +19,7 @@ import { useAppSync } from '../hooks/useAppSync';
 import { StressBlocklyCanvas } from './StressTester/StressBlocklyCanvas';
 import { StressTestManager } from './StressTester/StressTestManager';
 import { useStressTestStore } from '../stores/useStressTestStore';
+import { CompanionImportModal } from './CompanionImportModal';
 
 import { RightPanelTabs } from './RightPanel/RightPanelTabs';
 import { getPanelContent } from './RightPanel/getPanelContent';
@@ -196,6 +197,7 @@ export function MainApp() {
       <InternalOverlayContainer />
       <NotificationCenter />
       <StressTestManager />
+      <CompanionImportModal />
     </div>
   );
 }

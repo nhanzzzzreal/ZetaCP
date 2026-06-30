@@ -5,7 +5,7 @@ use crate::state::AppState;
 use crate::errors::ZetaError;
 use super::types::{
     TestcaseMeta, TestcaseData, TestcaseResult, Subtask, FileSettings, FileContext,
-    DbMetaRow, DbDataRow, DbResultRow, DbSubtaskRow
+    DbMetaRow, DbDataRow, DbResultRow, DbSubtaskRow, ExecutionConfig, StressConfig
 };
 
 #[tauri::command]
@@ -272,7 +272,7 @@ pub async fn load_file_settings(
 
 #[tauri::command]
 pub async fn save_file_settings(
-    settings: FileSettings,
+    settings: ExecutionConfig,
     state: State<'_, AppState>,
     file_path: Option<String>,
 ) -> Result<(), ZetaError> {
@@ -285,3 +285,20 @@ pub async fn save_file_settings(
     config_repo.save_file_settings(&settings).await?;
     Ok(())
 }
+
+#[tauri::command]
+pub async fn save_stress_settings(
+    settings: StressConfig,
+    state: State<'_, AppState>,
+    file_path: Option<String>,
+) -> Result<(), ZetaError> {
+    let fp = file_path.unwrap_or_else(|| settings.file_path.clone());
+    let proj_db = state.get_db_pool(&fp, true).await?.ok_or_else(|| {
+        ZetaError::Database("Không thể khởi tạo database pool".to_string())
+    })?;
+
+    let config_repo = crate::db::repository::ConfigRepository::new(&proj_db);
+    config_repo.save_stress_settings(&settings).await?;
+    Ok(())
+}
+

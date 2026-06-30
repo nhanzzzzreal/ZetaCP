@@ -3,7 +3,7 @@
 use sqlx::SqlitePool;
 use crate::errors::ZetaError;
 use crate::commands::testcases::{
-    FileSettings, TestcaseMeta, TestcaseData, TestcaseResult, Subtask, DiffLine
+    FileSettings, TestcaseMeta, TestcaseData, TestcaseResult, Subtask, DiffLine, ExecutionConfig, StressConfig
 };
 
 pub use super::global_repo::{SettingsRepository, RunRecord, RunsRepository};
@@ -19,24 +19,24 @@ impl<'a> ConfigRepository<'a> {
     }
 
     pub async fn get_file_settings(&self, file_path: &str) -> Result<Option<FileSettings>, ZetaError> {
+        let norm_path = file_path.replace('\\', "/");
         let settings = sqlx::query_as::<_, FileSettings>(
             "SELECT file_path, compiler_flags, interpreter_flags, io_mode, input_file, output_file, time_limit_ms, memory_limit_kb, run_mode, checker_type, custom_checker_path, custom_checker_binary, \
              stress_brute_path, stress_sol_path, stress_gen_path, stress_gen_mode, stress_gen_time_limit_ms, stress_gen_memory_limit_kb, stress_brute_time_limit_ms, stress_brute_memory_limit_kb, \
              stress_test_count, stress_stop_condition, stress_auto_export, blockly_workspace \
              FROM FileSettings WHERE file_path = ?"
         )
-        .bind(file_path)
+        .bind(&norm_path)
         .fetch_optional(self.pool)
         .await?;
         Ok(settings)
     }
 
-    pub async fn save_file_settings(&self, settings: &FileSettings) -> Result<(), ZetaError> {
+    pub async fn save_file_settings(&self, settings: &ExecutionConfig) -> Result<(), ZetaError> {
+        let norm_path = settings.file_path.replace('\\', "/");
         sqlx::query(
-            "INSERT INTO FileSettings (file_path, compiler_flags, interpreter_flags, io_mode, input_file, output_file, time_limit_ms, memory_limit_kb, run_mode, checker_type, custom_checker_path, custom_checker_binary, \
-             stress_brute_path, stress_sol_path, stress_gen_path, stress_gen_mode, stress_gen_time_limit_ms, stress_gen_memory_limit_kb, stress_brute_time_limit_ms, stress_brute_memory_limit_kb, \
-             stress_test_count, stress_stop_condition, stress_auto_export, blockly_workspace) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
+            "INSERT INTO FileSettings (file_path, compiler_flags, interpreter_flags, io_mode, input_file, output_file, time_limit_ms, memory_limit_kb, run_mode, checker_type, custom_checker_path, custom_checker_binary) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
              ON CONFLICT(file_path) DO UPDATE SET \
                 compiler_flags = excluded.compiler_flags, \
                 interpreter_flags = excluded.interpreter_flags, \
@@ -48,7 +48,31 @@ impl<'a> ConfigRepository<'a> {
                 run_mode = excluded.run_mode, \
                 checker_type = excluded.checker_type, \
                 custom_checker_path = excluded.custom_checker_path, \
-                custom_checker_binary = excluded.custom_checker_binary, \
+                custom_checker_binary = excluded.custom_checker_binary"
+        )
+        .bind(&norm_path)
+        .bind(&settings.compiler_flags)
+        .bind(&settings.interpreter_flags)
+        .bind(&settings.io_mode)
+        .bind(&settings.input_file)
+        .bind(&settings.output_file)
+        .bind(settings.time_limit_ms)
+        .bind(settings.memory_limit_kb)
+        .bind(&settings.run_mode)
+        .bind(&settings.checker_type)
+        .bind(&settings.custom_checker_path)
+        .bind(&settings.custom_checker_binary)
+        .execute(self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn save_stress_settings(&self, settings: &StressConfig) -> Result<(), ZetaError> {
+        let norm_path = settings.file_path.replace('\\', "/");
+        sqlx::query(
+            "INSERT INTO FileSettings (file_path, stress_brute_path, stress_sol_path, stress_gen_path, stress_gen_mode, stress_gen_time_limit_ms, stress_gen_memory_limit_kb, stress_brute_time_limit_ms, stress_brute_memory_limit_kb, stress_test_count, stress_stop_condition, stress_auto_export, blockly_workspace) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
+             ON CONFLICT(file_path) DO UPDATE SET \
                 stress_brute_path = excluded.stress_brute_path, \
                 stress_sol_path = excluded.stress_sol_path, \
                 stress_gen_path = excluded.stress_gen_path, \
@@ -62,18 +86,7 @@ impl<'a> ConfigRepository<'a> {
                 stress_auto_export = excluded.stress_auto_export, \
                 blockly_workspace = excluded.blockly_workspace"
         )
-        .bind(&settings.file_path)
-        .bind(&settings.compiler_flags)
-        .bind(&settings.interpreter_flags)
-        .bind(&settings.io_mode)
-        .bind(&settings.input_file)
-        .bind(&settings.output_file)
-        .bind(settings.time_limit_ms)
-        .bind(settings.memory_limit_kb)
-        .bind(&settings.run_mode)
-        .bind(&settings.checker_type)
-        .bind(&settings.custom_checker_path)
-        .bind(&settings.custom_checker_binary)
+        .bind(&norm_path)
         .bind(&settings.stress_brute_path)
         .bind(&settings.stress_sol_path)
         .bind(&settings.stress_gen_path)
@@ -182,10 +195,11 @@ impl<'a> TestcaseRepository<'a> {
     }
 
     pub async fn get_metas(&self, file_path: &str) -> Result<Vec<TestcaseMeta>, ZetaError> {
+        let norm_path = file_path.replace('\\', "/");
         let rows = sqlx::query_as::<_, DbMetaRow>(
             "SELECT id, file_path, name, order_index, subtask_id, is_active FROM TestcaseMeta WHERE file_path = ? ORDER BY order_index ASC"
         )
-        .bind(file_path)
+        .bind(&norm_path)
         .fetch_all(self.pool)
         .await?;
         Ok(rows.into_iter().map(TestcaseMeta::from).collect())
@@ -206,21 +220,23 @@ impl<'a> TestcaseRepository<'a> {
     }
 
     pub async fn get_results(&self, file_path: &str) -> Result<Vec<TestcaseResult>, ZetaError> {
+        let norm_path = file_path.replace('\\', "/");
         let rows = sqlx::query_as::<_, DbResultRow>(
             "SELECT id, last_status, exec_time_ms, memory_kb, actual_output, diff_info, run_at \
              FROM TestcaseResult WHERE id IN (SELECT id FROM TestcaseMeta WHERE file_path = ?)"
         )
-        .bind(file_path)
+        .bind(&norm_path)
         .fetch_all(self.pool)
         .await?;
         Ok(rows.into_iter().map(TestcaseResult::from).collect())
     }
 
     pub async fn get_subtasks(&self, file_path: &str) -> Result<Vec<Subtask>, ZetaError> {
+        let norm_path = file_path.replace('\\', "/");
         let rows = sqlx::query_as::<_, DbSubtaskRow>(
             "SELECT id, file_path, name, max_score, order_index FROM Subtask WHERE file_path = ? ORDER BY order_index ASC"
         )
-        .bind(file_path)
+        .bind(&norm_path)
         .fetch_all(self.pool)
         .await?;
         Ok(rows.into_iter().map(Subtask::from).collect())

@@ -53,9 +53,12 @@ function applyDefaultSnippetIfEmpty(text: string, lang: string, activeFile: stri
   return text;
 }
 
-async function loadCachedFile(activeFile: string, cached: string, active: boolean) {
+async function loadCachedFile(activeFile: string, cached: string, active: boolean, editor: any) {
   if (!active) return;
   useProjectStore.getState().setActiveFileContent(cached);
+  if (editor?.getModel() && editor.getModel().getValue() !== cached) {
+    editor.getModel().setValue(cached);
+  }
   try {
     await lspDidOpen(getLspLang(activeFile), activeFile, cached);
   } catch (err: unknown) {
@@ -94,7 +97,7 @@ async function performLoadFile(
 ) {
   const cached = useProjectStore.getState().fileContents[activeFile];
   if (cached !== undefined) {
-    await loadCachedFile(activeFile, cached, active);
+    await loadCachedFile(activeFile, cached, active, editor);
   } else {
     try {
       await loadFreshFile(activeFile, rootPath, active, editor, actions);

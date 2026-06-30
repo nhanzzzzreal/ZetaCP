@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as Blockly from 'blockly';
 import { registerCustomBlocks } from './blocklySetup';
 import { getToolboxConfig } from './blocks/toolbox';
-import { readTextFile, writeTextFile, loadFileSettings, saveFileSettings } from '../../lib/tauri-bridge';
+import { readTextFile, writeTextFile, loadFileSettings, saveStressSettings } from '../../lib/tauri-bridge';
 import { useStressTestStore } from '../../stores/useStressTestStore';
 
 interface UseBlocklyProps {
@@ -274,8 +274,8 @@ export const useBlockly = ({ containerRef, solPath, rootPath, genPath, genMode }
             filePath: currentSol,
             blocklyWorkspace: jsonStr,
           };
-          await saveFileSettings(updatedSettings);
-          useStressTestStore.setState({ solSettings: updatedSettings });
+          await saveStressSettings(updatedSettings as any);
+          useStressTestStore.setState({ solSettings: updatedSettings as any });
         } catch (e) {
           console.error('[ZetaCP Canvas DB Save Error]:', e);
         }

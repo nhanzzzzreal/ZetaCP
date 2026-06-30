@@ -59,6 +59,7 @@ pub struct Subtask {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, sqlx::FromRow)]
+#[serde(default)]
 pub struct FileSettings {
     #[serde(rename = "filePath")]
     pub file_path: String,
@@ -108,6 +109,96 @@ pub struct FileSettings {
     pub stress_auto_export: bool,
     #[serde(rename = "blocklyWorkspace")]
     pub blockly_workspace: String,
+}
+
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct ExecutionConfig {
+    #[serde(rename = "filePath")]
+    pub file_path: String,
+    #[serde(rename = "compilerFlags")]
+    pub compiler_flags: String,
+    #[serde(rename = "interpreterFlags")]
+    pub interpreter_flags: String,
+    #[serde(rename = "ioMode")]
+    pub io_mode: String,
+    #[serde(rename = "inputFile")]
+    pub input_file: String,
+    #[serde(rename = "outputFile")]
+    pub output_file: String,
+    #[serde(rename = "timeLimitMs")]
+    pub time_limit_ms: i64,
+    #[serde(rename = "memoryLimitKb")]
+    pub memory_limit_kb: i64,
+    #[serde(rename = "runMode")]
+    pub run_mode: String,
+    #[serde(rename = "checkerType")]
+    pub checker_type: String,
+    #[serde(rename = "customCheckerPath")]
+    pub custom_checker_path: String,
+    #[serde(rename = "customCheckerBinary")]
+    pub custom_checker_binary: String,
+}
+
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct StressConfig {
+    #[serde(rename = "filePath")]
+    pub file_path: String,
+    #[serde(rename = "stressBrutePath")]
+    pub stress_brute_path: String,
+    #[serde(rename = "stressSolPath")]
+    pub stress_sol_path: String,
+    #[serde(rename = "stressGenPath")]
+    pub stress_gen_path: String,
+    #[serde(rename = "stressGenMode")]
+    pub stress_gen_mode: String,
+    #[serde(rename = "stressGenTimeLimitMs")]
+    pub stress_gen_time_limit_ms: i64,
+    #[serde(rename = "stressGenMemoryLimitKb")]
+    pub stress_gen_memory_limit_kb: i64,
+    #[serde(rename = "stressBruteTimeLimitMs")]
+    pub stress_brute_time_limit_ms: i64,
+    #[serde(rename = "stressBruteMemoryLimitKb")]
+    pub stress_brute_memory_limit_kb: i64,
+    #[serde(rename = "stressTestCount")]
+    pub stress_test_count: i64,
+    #[serde(rename = "stressStopCondition")]
+    pub stress_stop_condition: String,
+    #[serde(rename = "stressAutoExport")]
+    pub stress_auto_export: bool,
+    #[serde(rename = "blocklyWorkspace")]
+    pub blockly_workspace: String,
+}
+
+
+impl Default for FileSettings {
+    fn default() -> Self {
+        Self {
+            file_path: "".to_string(),
+            compiler_flags: "-O2 -std=c++17".to_string(),
+            interpreter_flags: "".to_string(),
+            io_mode: "stdio".to_string(),
+            input_file: "".to_string(),
+            output_file: "".to_string(),
+            time_limit_ms: 1000,
+            memory_limit_kb: 262144,
+            run_mode: "parallel".to_string(),
+            checker_type: "ignore_trailing_space".to_string(),
+            custom_checker_path: "".to_string(),
+            custom_checker_binary: "".to_string(),
+            stress_brute_path: "".to_string(),
+            stress_sol_path: "".to_string(),
+            stress_gen_path: "".to_string(),
+            stress_gen_mode: "blockly".to_string(),
+            stress_gen_time_limit_ms: 2000,
+            stress_gen_memory_limit_kb: 262144,
+            stress_brute_time_limit_ms: 2000,
+            stress_brute_memory_limit_kb: 262144,
+            stress_test_count: 100,
+            stress_stop_condition: "first_error".to_string(),
+            stress_auto_export: false,
+            blockly_workspace: "".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

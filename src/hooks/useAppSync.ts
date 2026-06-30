@@ -5,9 +5,10 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useSnippetStore } from '../stores/useSnippetStore';
 import { useOverlayStore } from '../stores/useOverlayStore';
 import { useTestcaseStore } from '../stores/useTestcaseStore';
-import { computeDiff } from '../lib/tauri-bridge';
+import { computeDiff, startCompanionListener } from '../lib/tauri-bridge';
 import { useSession } from './useSession';
 import { useShortcuts } from './useShortcuts';
+import { useCompanionStore, CompanionProblem } from '../stores/useCompanionStore';
 
 export function useAppSync() {
   const activeFile = useProjectStore((s) => s.activeFile);
@@ -110,9 +111,25 @@ export function useAppSync() {
       }
     });
 
+    let unlistenCompanion: (() => void) | null = null;
+    const setupCompanion = async () => {
+      try {
+        await startCompanionListener();
+      } catch (e) {
+        console.warn("Failed to start companion listener:", e);
+      }
+      unlistenCompanion = await listen<CompanionProblem>('companion://problem', (event) => {
+        useCompanionStore.getState().addProblem(event.payload);
+      });
+    };
+    setupCompanion();
+
     return () => {
       unsubscribe();
       unlistenOverlays.then(fn => fn());
+      if (unlistenCompanion) {
+        unlistenCompanion();
+      }
     };
   }, [activeFile, loadSettings, loadOverlaysForFile, syncOverlays, togglePin]);
 }

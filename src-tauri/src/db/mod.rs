@@ -61,6 +61,7 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ZetaError> {
         (11, include_str!("migrations/v11.sql")),
         (12, include_str!("migrations/v12.sql")),
         (13, include_str!("migrations/v13.sql")),
+        (14, include_str!("migrations/v14.sql")),
     ];
 
     for (version, sql) in migrations {

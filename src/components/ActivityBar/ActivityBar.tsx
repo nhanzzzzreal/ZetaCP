@@ -20,6 +20,7 @@ const SIDEBAR_ITEMS: { id: PanelViewId; icon: string; label: string }[] = [
   { id: 'snippets', icon: 'symbol-method', label: 'Snippets' },
   { id: 'stress', icon: 'beaker', label: 'Stress Tester' },
   { id: 'testcase', icon: 'checklist', label: 'Testcase Manager' },
+  { id: 'codeforces', icon: 'broadcast', label: 'Codeforces Hub' },
 ];
 
 const OVERLAY_TOOLS = [

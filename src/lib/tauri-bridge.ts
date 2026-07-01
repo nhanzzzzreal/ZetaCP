@@ -11,3 +11,4 @@ export * from './tauri-bridge/snippets';
 export * from './tauri-bridge/docs';
 export * from './tauri-bridge/lsp';
 export * from './tauri-bridge/calculator';
+export * from './tauri-bridge/codeforces';

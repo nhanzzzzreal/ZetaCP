@@ -5,7 +5,8 @@ export type PanelViewId =
   | 'snippets'
   | 'stress'
   | 'debug'
-  | 'testcase';
+  | 'testcase'
+  | 'codeforces';
 
 export interface PanelLayoutSettings {
   rightTabs: PanelViewId[];
@@ -18,6 +19,7 @@ export const PANEL_VIEW_LABELS: Record<PanelViewId, string> = {
   stress: 'Stress Tester',
   debug: 'CP Debugger',
   testcase: 'Testcases',
+  codeforces: 'Codeforces Hub',
 };
 
 export const DEFAULT_PANEL_LAYOUT: PanelLayoutSettings = {

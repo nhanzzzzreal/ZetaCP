@@ -197,7 +197,16 @@ pub fn run() {
             crate::commands::companion::start_companion_listener,
             crate::commands::companion::stop_companion_listener,
             crate::commands::companion::is_companion_listener_running,
-            crate::commands::companion::overwrite_testcases
+            crate::commands::companion::overwrite_testcases,
+            crate::commands::codeforces::cf_save_cookies,
+            crate::commands::codeforces::cf_load_cookies,
+            crate::commands::codeforces::cf_check_session,
+            crate::commands::codeforces::cf_save_problem_metadata,
+            crate::commands::codeforces::cf_load_problem_metadata,
+            crate::commands::codeforces::codeforces_login,
+            crate::commands::codeforces::codeforces_verify_session,
+            crate::commands::codeforces::codeforces_download_problem,
+            crate::commands::codeforces::codeforces_submit_solution
         ])
         .run(tauri::generate_context!())
     {

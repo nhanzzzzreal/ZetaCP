@@ -11,6 +11,7 @@ const TAB_ICONS: Record<PanelViewId, string> = {
   stress: 'beaker',
   debug: 'debug-alt',
   testcase: 'checklist',
+  codeforces: 'broadcast',
 };
 
 interface ContextMenuState {

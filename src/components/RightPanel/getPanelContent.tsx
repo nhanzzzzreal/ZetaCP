@@ -1,3 +1,4 @@
+import { CodeforcesHubPanel } from '../CodeforcesHub/CodeforcesHubPanel';
 // src/components/RightPanel/getPanelContent.tsx
 
 import React from 'react';
@@ -17,6 +18,8 @@ export const getPanelContent = (viewId: PanelViewId): React.ReactNode => {
       return <StressTesterSidebar />;
     case 'testcase':
       return <TestcasePanel />;
+    case 'codeforces':
+      return <CodeforcesHubPanel />;
     case 'debug':
       return (
         <div className="w-full h-full bg-[var(--zcp-bg-sidebar)] p-4 text-xs text-[var(--zcp-text-secondary)] font-sans">

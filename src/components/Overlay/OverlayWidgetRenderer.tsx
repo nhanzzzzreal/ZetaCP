@@ -1,3 +1,4 @@
+import { CodeforcesProblemWidget } from './widgets/CodeforcesProblemWidget';
 // src/components/Overlay/OverlayWidgetRenderer.tsx
 
 import React from 'react';
@@ -36,6 +37,9 @@ export const OverlayWidgetRenderer: React.FC<OverlayWidgetRendererProps> = ({ ov
     case 'calculator':
       return <CalculatorWidget overlay={overlay} />;
     
+    case 'codeforces':
+      return <CodeforcesProblemWidget overlay={overlay} />;
+
     case 'graph':
     case 'graph-viewer':
       return <GraphVisualizerWidget overlay={overlay} />;

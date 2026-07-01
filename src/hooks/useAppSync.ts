@@ -9,6 +9,8 @@ import { computeDiff, startCompanionListener } from '../lib/tauri-bridge';
 import { useSession } from './useSession';
 import { useShortcuts } from './useShortcuts';
 import { useCompanionStore, CompanionProblem } from '../stores/useCompanionStore';
+import { useCodeforcesStore } from '../stores/useCodeforcesStore';
+import { notify } from '../stores/useNotificationStore';
 
 export function useAppSync() {
   const activeFile = useProjectStore((s) => s.activeFile);
@@ -124,11 +126,31 @@ export function useAppSync() {
     };
     setupCompanion();
 
+    let unlistenCfLogin: (() => void) | null = null;
+    const setupCfLogin = async () => {
+      unlistenCfLogin = await listen<string>('cf-login-success', (event) => {
+        const handle = event.payload;
+        if (handle) {
+          useCodeforcesStore.setState({ isLoggedIn: true, handle });
+          localStorage.setItem('cf_handle', handle);
+          notify.success('Logged In', `Successfully logged in to Codeforces as: ${handle}`);
+        } else {
+          useCodeforcesStore.setState({ isLoggedIn: false, handle: '' });
+          localStorage.removeItem('cf_handle');
+          notify.error('Login Failed', 'Failed to retrieve session handle.');
+        }
+      });
+    };
+    setupCfLogin();
+
     return () => {
       unsubscribe();
       unlistenOverlays.then(fn => fn());
       if (unlistenCompanion) {
         unlistenCompanion();
+      }
+      if (unlistenCfLogin) {
+        unlistenCfLogin();
       }
     };
   }, [activeFile, loadSettings, loadOverlaysForFile, syncOverlays, togglePin]);

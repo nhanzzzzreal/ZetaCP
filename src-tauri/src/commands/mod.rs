@@ -12,4 +12,5 @@ pub mod docs;
 pub mod stress_test;
 pub mod calculator;
 pub mod companion;
+pub mod codeforces;
 

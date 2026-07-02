@@ -1,6 +1,7 @@
 <div align="center">
 
-# ![ZetaCP Logo](src-tauri/icons/icon.ico) ZetaCP
+# ![ZetaCP Logo](src-tauri/icons/icon.ico) 
+## ZetaCP
 
 ### The competitive programming workspace where every tool actually talks to every other tool.
 

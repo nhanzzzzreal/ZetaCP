@@ -3,8 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { loader } from "@monaco-editor/react";
 
-// Configure Monaco Editor to load from local public directory
-loader.config({ paths: { vs: "/monaco-editor/min/vs" } });
+// Configure Monaco Editor to load from the bundled public directory.
+// Use the app base path so it works in both dev and packaged Tauri builds.
+loader.config({ paths: { vs: `${import.meta.env.BASE_URL}monaco-editor/min/vs` } });
 
 // Disable default webview context menu globally
 window.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -12,7 +13,7 @@ window.addEventListener("contextmenu", (e) => e.preventDefault());
 // Disable default browser keyboard shortcuts globally
 window.addEventListener("keydown", (e) => {
   const ctrlOrMeta = e.ctrlKey || e.metaKey;
-  const shift = e.shiftKey;
+  //const shift = e.shiftKey;
   const alt = e.altKey;
   const key = e.key.toLowerCase();
  
@@ -56,13 +57,13 @@ window.addEventListener("keydown", (e) => {
   }
  
   // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Developer Tools)
-  if (
-    e.key === "F12" ||
-    (ctrlOrMeta && shift && ["i", "j", "c"].includes(key))
-  ) {
-    e.preventDefault();
-    return;
-  }
+  //if (
+  //  e.key === "F12" ||
+  //  (ctrlOrMeta && shift && ["i", "j", "c"].includes(key))
+  //) {
+  //  e.preventDefault();
+  //  return;
+  //}
 });
  
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

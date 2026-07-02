@@ -18,6 +18,7 @@ interface UseBlocklyProps {
 export const useBlockly = ({ containerRef, solPath, rootPath, genPath, genMode }: UseBlocklyProps) => {
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
   const isLoadingRef = useRef(false);
+  const blocklyMediaUrl = `${import.meta.env.BASE_URL}blockly/media/`;
 
   const solPathRef = useRef(solPath);
   const rootPathRef = useRef(rootPath);
@@ -106,6 +107,8 @@ export const useBlockly = ({ containerRef, solPath, rootPath, genPath, genMode }
       toolbox: getToolboxConfig(),
       renderer: 'zelos',
       theme: darkTheme,
+      css: true,
+      media: blocklyMediaUrl,
       grid: {
         spacing: 20,
         length: 3,
